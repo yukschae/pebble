@@ -12,17 +12,31 @@ import { Button } from "@/components/ui/button"
 
 export default function LandingPage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const [showStars, setShowStars] = useState(false)
 
   useEffect(() => {
     setShowStars(true)
+    console.log("Landing page - Auth state:", { user: !!user, loading })
 
     // ユーザーが既にログインしている場合はダッシュボードにリダイレクト
     if (!loading && user) {
+      console.log("Redirecting to dashboard - user is logged in")
       router.push("/dashboard")
     }
   }, [user, loading, router])
+
+  // 強制ログアウト機能を追加
+  const handleForceSignOut = async () => {
+    console.log("Force sign out requested")
+    try {
+      await signOut()
+      console.log("Force sign out successful")
+      window.location.reload()
+    } catch (error) {
+      console.error("Force sign out failed:", error)
+    }
+  }
 
   if (loading) {
     return (
@@ -159,6 +173,18 @@ export default function LandingPage() {
           <Button variant="outline" onClick={() => router.push("/dashboard")} className="border-white/10">
             デモモードでダッシュボードを表示
           </Button>
+
+          {/* 強制ログアウトボタン */}
+          <div className="mt-4">
+            <Button
+              variant="outline"
+              onClick={handleForceSignOut}
+              className="border-red-500/30 text-red-400 hover:bg-red-900/20 text-xs"
+            >
+              ログイン状態をリセット
+            </Button>
+            <p className="text-xs text-gray-500 mt-1">ログインに問題がある場合はこちらをクリック</p>
+          </div>
         </div>
 
         <footer className="py-6 text-center text-gray-400 text-sm">

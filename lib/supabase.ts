@@ -115,8 +115,11 @@ export function useAuth() {
   const router = useRouter()
 
   useEffect(() => {
+    console.log("useAuth hook initialized")
+
     // デモモードが有効な場合、デモユーザーを設定
     if (DEMO_MODE) {
+      console.log("Demo mode enabled, setting demo user")
       setUser(DEMO_USER)
       setUserProfile(DEMO_PROFILE)
       setLoading(false)
@@ -127,11 +130,17 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session ? "session exists" : "no session")
       setLoading(true)
       if (session?.user) {
         setUser(session.user)
-        const profile = await getUserProfile(session.user.id)
-        setUserProfile(profile)
+        try {
+          const profile = await getUserProfile(session.user.id)
+          setUserProfile(profile)
+          console.log("User profile loaded:", profile ? "profile exists" : "no profile")
+        } catch (error) {
+          console.error("Error fetching user profile:", error)
+        }
       } else {
         setUser(null)
         setUserProfile(null)
@@ -140,28 +149,53 @@ export function useAuth() {
     })
 
     // 初期状態の取得
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user)
-        getUserProfile(session.user.id).then(setUserProfile)
+    const checkSession = async () => {
+      try {
+        console.log("Checking initial session")
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        console.log("Initial session check:", session ? "session exists" : "no session")
+
+        if (session?.user) {
+          setUser(session.user)
+          try {
+            const profile = await getUserProfile(session.user.id)
+            setUserProfile(profile)
+            console.log("Initial user profile loaded:", profile ? "profile exists" : "no profile")
+          } catch (error) {
+            console.error("Error fetching initial user profile:", error)
+          }
+        }
+      } catch (error) {
+        console.error("Error checking initial session:", error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    checkSession()
 
     return () => {
+      console.log("Unsubscribing from auth state changes")
       subscription.unsubscribe()
     }
   }, [])
 
   const handleSignIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in for:", email)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        console.error("Sign in error:", error.message)
+        throw error
+      }
 
+      console.log("Sign in successful")
       return data
     } catch (error) {
       console.error("Error signing in:", error)
@@ -171,13 +205,18 @@ export function useAuth() {
 
   const handleSignUp = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign up for:", email)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        console.error("Sign up error:", error.message)
+        throw error
+      }
 
+      console.log("Sign up successful")
       return data
     } catch (error) {
       console.error("Error signing up:", error)
@@ -187,9 +226,14 @@ export function useAuth() {
 
   const handleSignOut = async () => {
     try {
+      console.log("Attempting sign out")
       const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      if (error) {
+        console.error("Sign out error:", error.message)
+        throw error
+      }
 
+      console.log("Sign out successful")
       router.push("/")
       return true
     } catch (error) {
@@ -200,10 +244,15 @@ export function useAuth() {
 
   const updateUserProfile = async (displayName: string) => {
     try {
-      if (!user) throw new Error("User not authenticated")
+      if (!user) {
+        console.error("Cannot update profile: User not authenticated")
+        throw new Error("User not authenticated")
+      }
 
+      console.log("Updating user profile for:", user.id)
       const result = await saveUserProfile(user.id, displayName)
       setUserProfile({ ...userProfile, display_name: displayName })
+      console.log("Profile update successful")
       return result
     } catch (error) {
       console.error("Error updating user profile:", error)
@@ -225,6 +274,7 @@ export function useAuth() {
 // ユーザープロファイルを取得する関数
 export async function getUserProfile(userId: string) {
   try {
+    console.log("Getting user profile for:", userId)
     const supabase = getSupabaseClient()
 
     const { data, error } = await supabase.from("user_profiles").select("*").eq("user_id", userId).single()
@@ -249,6 +299,7 @@ export async function saveUserProfile(userId: string, displayName: string) {
       throw new Error("User ID is required")
     }
 
+    console.log("Saving user profile for:", userId)
     const supabase = getSupabaseClient()
 
     const { data, error } = await supabase.from("user_profiles").upsert(
@@ -296,6 +347,7 @@ export async function getUserRiasecResults(userId: string) {
 
   // 通常の処理
   try {
+    console.log("Getting RIASEC results for:", userId)
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from("riasec_results")
@@ -319,6 +371,7 @@ export async function getUserRiasecResults(userId: string) {
 // RIASECの回答を保存する関数
 export async function saveRiasecResponses(userId: string, responses: any) {
   try {
+    console.log("Saving RIASEC responses for:", userId)
     const supabase = getSupabaseClient()
     const { data, error } = await supabase.from("riasec_responses").insert([
       {
@@ -343,6 +396,7 @@ export async function saveRiasecResponses(userId: string, responses: any) {
 // RIASECの結果を保存する関数
 export async function saveRiasecResults(userId: string, results: any) {
   try {
+    console.log("Saving RIASEC results for:", userId)
     const supabase = getSupabaseClient()
     const { data, error } = await supabase.from("riasec_results").insert([
       {
@@ -391,6 +445,7 @@ export async function getUserOceanResults(userId: string) {
 
   // 通常の処理
   try {
+    console.log("Getting OCEAN results for:", userId)
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from("ocean_results")
@@ -414,6 +469,7 @@ export async function getUserOceanResults(userId: string) {
 // OCEANの回答を保存する関数
 export async function saveOceanResponses(userId: string, responses: any) {
   try {
+    console.log("Saving OCEAN responses for:", userId)
     const supabase = getSupabaseClient()
     const { data, error } = await supabase.from("ocean_responses").insert([
       {
@@ -438,6 +494,7 @@ export async function saveOceanResponses(userId: string, responses: any) {
 // OCEANの結果を保存する関数
 export async function saveOceanResults(userId: string, results: any) {
   try {
+    console.log("Saving OCEAN results for:", userId)
     const supabase = getSupabaseClient()
     const { data, error } = await supabase.from("ocean_results").insert([
       {
@@ -462,6 +519,7 @@ export async function saveOceanResults(userId: string, results: any) {
 // パッションシャトル提案を保存する関数
 export async function savePassionShuttleSuggestions(userId: string, suggestions: any[], feedback?: string) {
   try {
+    console.log("Saving passion shuttle suggestions for:", userId)
     const supabase = getSupabaseClient()
 
     const { error } = await supabase.from("passion_shuttle_suggestions").insert({
@@ -509,6 +567,7 @@ export async function getLatestPassionShuttleSuggestions(userId: string) {
 
   // 通常の処理
   try {
+    console.log("Getting latest passion shuttle suggestions for:", userId)
     const supabase = getSupabaseClient()
 
     const { data, error } = await supabase
@@ -533,6 +592,7 @@ export async function getLatestPassionShuttleSuggestions(userId: string) {
 // パッションシャトルを保存する関数
 export async function savePassionShuttle(userId: string, title: string, description: string, tags: string[]) {
   try {
+    console.log("Saving passion shuttle for:", userId)
     const supabase = getSupabaseClient()
 
     // 既存のパッションシャトルを非選択状態にする
@@ -587,6 +647,7 @@ export async function getSelectedPassionShuttle(userId: string) {
 
   // 通常の処理
   try {
+    console.log("Getting selected passion shuttle for:", userId)
     const supabase = getSupabaseClient()
 
     const { data, error } = await supabase
@@ -611,6 +672,7 @@ export async function getSelectedPassionShuttle(userId: string) {
 // クエスト方向性を保存する関数
 export async function saveQuestDirection(userId: string, direction: any) {
   try {
+    console.log("Saving quest direction for:", userId)
     const supabase = getSupabaseClient()
 
     // 既存の方向性を非選択状態にする
@@ -663,6 +725,7 @@ export async function getSelectedQuestDirection(userId: string) {
 
   // 通常の処理
   try {
+    console.log("Getting selected quest direction for:", userId)
     const supabase = getSupabaseClient()
 
     const { data, error } = await supabase
@@ -687,6 +750,7 @@ export async function getSelectedQuestDirection(userId: string) {
 // クエストを保存する関数
 export async function saveQuests(userId: string, quests: any[]) {
   try {
+    console.log("Saving quests for:", userId)
     const supabase = getSupabaseClient()
 
     // 既存のクエストを削除
@@ -805,6 +869,7 @@ export async function getUserQuests(userId: string) {
 
   // 通常の処理
   try {
+    console.log("Getting quests for:", userId)
     const supabase = getSupabaseClient()
 
     const { data, error } = await supabase
@@ -828,6 +893,7 @@ export async function getUserQuests(userId: string) {
 // クエストの進捗を更新する関数
 export async function updateQuestProgress(questId: number, completed: boolean, current: boolean) {
   try {
+    console.log("Updating quest progress for quest ID:", questId)
     const supabase = getSupabaseClient()
 
     const { error } = await supabase
@@ -854,6 +920,7 @@ export async function updateQuestProgress(questId: number, completed: boolean, c
 // テーブルが存在するか確認する関数
 export async function checkTablesExist() {
   try {
+    console.log("Checking if tables exist")
     const supabase = getSupabaseClient()
 
     // riasec_responses テーブルの確認
@@ -916,4 +983,3 @@ export async function checkTablesExist() {
     }
   }
 }
-
