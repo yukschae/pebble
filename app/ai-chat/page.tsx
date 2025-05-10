@@ -58,7 +58,7 @@ import { getSupabaseClient } from "@/lib/supabase"
 export default function AIChat() {
   const router = useRouter()
   const { user } = useAuth()
-  const [username] = useState("ユーダイ")
+  const [username] = useState(user?.email?.split("@")[0] || "ゲスト")
   const [showStars, setShowStars] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isTyping, setIsTyping] = useState(false)
@@ -115,8 +115,8 @@ export default function AIChat() {
         if (data && data.length > 0) {
           // チャット履歴をフォーマット
           const formattedMessages = data.map((item) => ({
-            id: item.id.toString(),
-            content: item.message,
+            id: String(item.id), // Convert to string explicitly
+            content: String(item.message), // Convert to string explicitly
             role: item.role as "user" | "assistant",
           }))
 
@@ -292,7 +292,7 @@ export default function AIChat() {
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="bg-white/5 rounded-xl p-3 flex items-center border border-white/10">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3">
-              <span className="text-white font-bold">ユ</span>
+              <span className="text-white font-bold">{username.charAt(0)}</span>
             </div>
             <div className="flex-1">
               <div className="text-sm font-medium">{username}</div>
@@ -459,7 +459,7 @@ export default function AIChat() {
                       </div>
                       {message.role === "user" && (
                         <div className="w-10 h-10 ml-3 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0 border border-white/20">
-                          <span className="text-white font-bold">ユ</span>
+                          <span className="text-white font-bold">{username.charAt(0)}</span>
                         </div>
                       )}
                     </motion.div>
