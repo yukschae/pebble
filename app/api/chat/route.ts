@@ -1,6 +1,8 @@
-import { type Message, StreamingTextResponse } from "ai"
-import { createClient } from "@supabase/supabase-js"
-import { cookies } from "next/headers"
+import type { Message } from "ai";
+import { StreamingTextResponse, streamText } from "ai"; // Ensure StreamingTextResponse is here
+import { anthropic } from '@ai-sdk/anthropic';
+import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 export const maxDuration = 30
 
@@ -163,7 +165,7 @@ export async function POST(req: Request) {
         },
       })
 
-      return new StreamingTextResponse(stream)
+      return new streamText.toDataStreamResponse(stream) 
     }
 
     // AI SDKを使用してテキストをストリーミング
@@ -282,7 +284,7 @@ export async function POST(req: Request) {
         throw new Error("Failed to get response stream")
       }
 
-      return new StreamingTextResponse(stream)
+      return new toDataStreamResponse(stream)
     } catch (error) {
       console.error("Error calling Anthropic API:", error)
       return new Response(
