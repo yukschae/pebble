@@ -136,6 +136,7 @@ export function useAuth() {
         } catch (error) {
           console.error("useAuth (stateful hook): onAuthStateChange - Error fetching user profile:", error);
           setUserProfile(null);
+          setLoading(false);
         }
       } else {
         setUser(null);
@@ -164,6 +165,7 @@ export function useAuth() {
           } catch (error) {
             console.error("useAuth (stateful hook): checkSession - Error fetching profile in checkSession:", error);
             setUserProfile(null);
+            setLoading(false);
           }
         } else {
           setUser(null);
