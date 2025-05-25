@@ -26,94 +26,106 @@
 
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/supabase"
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/supabase";
 
 interface AuthCheckProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function AuthCheck({ children }: AuthCheckProps) {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-  const [loadingTimeout, setLoadingTimeout] = useState(false)
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  // const [loadingTimeout, setLoadingTimeout] = useState(false); // KEEP THIS COMMENTED OUT FOR NOW
 
-  // デモモードの確認
-  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
   useEffect(() => {
-    console.log("AuthCheck mounted, auth state:", { user: !!user, loading, isDemoMode })
-    setMounted(true)
+    console.log("AuthCheck: Component MOUNTED. Initial props from useAuth:", { user: !!user, loading, isDemoMode });
+    setMounted(true);
 
-    // ローディングが長すぎる場合のタイムアウト処理
+    // Original timeout logic - keep commented for now to isolate the primary loading issue
+    /*
     const timer = setTimeout(() => {
-      if (loading) {
-        console.error("Authentication check timeout - redirecting to login")
-        setLoadingTimeout(true)
-        router.push("/")
+      if (loading) { // This 'loading' is the state from useAuth at the time setTimeout was scheduled
+        console.error("AuthCheck: Authentication check TIMEOUT (10s) - redirecting to /");
+        setLoadingTimeout(true);
+        router.push("/");
       }
-    }, 10000) // 10秒後にタイムアウト
-
-    return () => clearTimeout(timer)
-  }, [loading, router])
+    }, 10000);
+    return () => {
+      console.log("AuthCheck: Cleanup for mount effect (clearing timeout)");
+      clearTimeout(timer);
+    };
+    */
+  }, []); // Empty dependency array for mount effect
 
   useEffect(() => {
-    // ローディング中は何もしない
-    if (loading) return
+    console.log("AuthCheck: Dependency effect [user, loading, mounted, router, isDemoMode] triggered.", { user: !!user, loading, mounted, isDemoMode });
 
-    // デモモードの場合は認証をスキップ
+    if (loading) {
+      console.log("AuthCheck: Still loading (from useAuth), no action in this effect.");
+      return;
+    }
+
     if (isDemoMode) {
-      console.log("Demo mode enabled, skipping auth check")
-      return
+      console.log("AuthCheck: DEMO MODE, skipping redirect logic.");
+      return;
     }
 
-    // ユーザーがログインしていない場合はログインページにリダイレクト
-    if (!user && mounted && !loading) {
-      console.log("User not authenticated, redirecting to login page")
-      router.push("/")
-    } else if (user && mounted && !loading) {
-      console.log("User authenticated:", user.id)
+    if (!user && mounted) { // Only redirect if mounted and not loading
+      console.log("AuthCheck: No user AND component is MOUNTED, redirecting to /");
+      router.push("/");
+    } else if (user && mounted) {
+      console.log("AuthCheck: User authenticated, component is MOUNTED. Children should render.");
+    } else if (!mounted) {
+      console.log("AuthCheck: Component NOT YET MOUNTED, deferring redirect decision.");
     }
-  }, [user, loading, mounted, router, isDemoMode])
+  }, [user, loading, mounted, router, isDemoMode]);
 
-  // ローディングタイムアウトの場合
-  if (loadingTimeout) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-white mb-4">認証に時間がかかっています</div>
-        <button onClick={() => router.push("/")} className="px-4 py-2 bg-blue-600 text-white rounded-md">
-          ログインページに戻る
-        </button>
-      </div>
-    )
-  }
+
+  // // ローディングタイムアウトの場合
+  // if (loadingTimeout) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
+  //       <div className="text-white mb-4">認証に時間がかかっています</div>
+  //       <button onClick={() => router.push("/")} className="px-4 py-2 bg-blue-600 text-white rounded-md">
+  //         ログインページに戻る
+  //       </button>
+  //     </div>
+  //   )
+  // }
 
   // ローディング中は読み込み表示
   if (loading) {
+    console.log("AuthCheck: RENDERING loading spinner (loading is true).");
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
         <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
-    )
+    );
   }
 
-  // デモモードの場合は常に子コンポーネントを表示
+  // If not loading:
   if (isDemoMode) {
-    console.log("Rendering children in demo mode")
-    return <>{children}</>
+    console.log("AuthCheck: RENDERING children (demo mode, not loading).");
+    return <>{children}</>;
   }
 
-  // ユーザーがログインしていない場合は何も表示しない
   if (!user) {
-    console.log("User not authenticated, not rendering children")
-    return null
+    console.log("AuthCheck: RENDERING null (no user, not loading). Expecting redirect effect to handle navigation.");
+    // It's often better to show a loading/redirecting indicator here too,
+    // rather than null, if the redirect is expected.
+    return (
+     <div className="flex items-center justify-center min-h-screen bg-gray-900">
+         <p className="text-white">Redirecting to login...</p>
+     </div>
+    );
   }
 
-  // ユーザーがログインしている場合は子コンポーネントを表示
-  console.log("User authenticated, rendering children")
-  return <>{children}</>
+  console.log("AuthCheck: RENDERING children (user authenticated, not loading).");
+  return <>{children}</>;
 }

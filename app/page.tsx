@@ -26,6 +26,8 @@ export default function LandingPage() {
     }
   }, [user, loading, router])
 
+  
+
   // 強制ログアウト機能を追加
   const handleForceSignOut = async () => {
     console.log("Force sign out requested")

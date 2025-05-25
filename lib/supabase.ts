@@ -108,79 +108,107 @@ export const AuthContext = createContext<AuthContextType>({
 })
 
 export function useAuth() {
-  const [user, setUser] = useState<any | null>(null)
-  const [userProfile, setUserProfile] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = getSupabaseClient()
-  const router = useRouter()
+  const [user, setUser] = useState<any | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true); // Initial state
+  const supabase = getSupabaseClient();
+  const router = useRouter();
+
+  console.log("useAuth: Hook initialized. Initial loading state:", loading); // Log hook initialization
 
   useEffect(() => {
-    console.log("useAuth hook initialized")
+    console.log("useAuth: Main auth useEffect RUNNING/RE-RUNNING. DEMO_MODE:", DEMO_MODE);
 
-    // デモモードが有効な場合、デモユーザーを設定
     if (DEMO_MODE) {
-      console.log("Demo mode enabled, setting demo user")
-      setUser(DEMO_USER)
-      setUserProfile(DEMO_PROFILE)
-      setLoading(false)
-      return
+      console.log("useAuth: DEMO_MODE enabled. Setting demo user and profile.");
+      setUser(DEMO_USER);
+      setUserProfile(DEMO_PROFILE);
+      console.log("useAuth: DEMO_MODE - setLoading(false)");
+      setLoading(false);
+      return;
     }
 
-    // 通常の認証処理
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session ? "session exists" : "no session")
-      setLoading(true)
+    console.log("useAuth: Setting up onAuthStateChange listener and initial session check.");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("useAuth: onAuthStateChange triggered. Event:", event, "Session:", session ? `User ID: ${session.user.id}` : "No session");
+      // setLoading(true); // <<< Potentially problematic if it causes rapid re-renders or gets stuck. Let's keep it commented for now.
       if (session?.user) {
-        setUser(session.user)
+        setUser(session.user);
+        console.log(`useAuth: onAuthStateChange - User set. Attempting to get profile for ${session.user.id}`);
         try {
-          const profile = await getUserProfile(session.user.id)
-          setUserProfile(profile)
-          console.log("User profile loaded:", profile ? "profile exists" : "no profile")
+          const profile = await getUserProfile(session.user.id); // Make sure getUserProfile has its own logs
+          setUserProfile(profile);
+          console.log("useAuth: onAuthStateChange - User profile fetched:", profile ? "Profile found" : "No profile");
         } catch (error) {
-          console.error("Error fetching user profile:", error)
+          console.error("useAuth: onAuthStateChange - Error fetching user profile:", error);
+          setUserProfile(null);
         }
       } else {
-        setUser(null)
-        setUserProfile(null)
+        setUser(null);
+        setUserProfile(null);
+        console.log("useAuth: onAuthStateChange - User and profile set to null.");
       }
-      setLoading(false)
-    })
+      console.log("useAuth: onAuthStateChange - setLoading(false) for event:", event);
+      setLoading(false);
+    });
 
-    // 初期状態の取得
     const checkSession = async () => {
+      console.log("useAuth: checkSession - Starting initial session check.");
       try {
-        console.log("Checking initial session")
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        console.log("Initial session check:", session ? "session exists" : "no session")
-
-        if (session?.user) {
-          setUser(session.user)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error("useAuth: checkSession - Error getting session:", sessionError);
+          setUser(null);
+          setUserProfile(null);
+        } else if (session?.user) {
+          setUser(session.user);
+          console.log(`useAuth: checkSession - Session found for ${session.user.id}. Attempting to get profile.`);
           try {
-            const profile = await getUserProfile(session.user.id)
-            setUserProfile(profile)
-            console.log("Initial user profile loaded:", profile ? "profile exists" : "no profile")
+            const profile = await getUserProfile(session.user.id);
+            setUserProfile(profile);
+            console.log("useAuth: checkSession - User profile fetched:", profile ? "Profile found" : "No profile");
           } catch (error) {
-            console.error("Error fetching initial user profile:", error)
+            console.error("useAuth: checkSession - Error fetching profile in checkSession:", error);
+            setUserProfile(null);
           }
+        } else {
+          setUser(null);
+          setUserProfile(null);
+          console.log("useAuth: checkSession - No active session found.");
         }
       } catch (error) {
-        console.error("Error checking initial session:", error)
+        console.error("useAuth: checkSession - Exception during getSession/profile fetch:", error);
+        setUser(null);
+        setUserProfile(null);
       } finally {
-        setLoading(false)
+        console.log("useAuth: checkSession - finally block, setLoading(false)");
+        setLoading(false);
       }
-    }
+    };
 
-    checkSession()
+    if (!DEMO_MODE) {
+      checkSession();
+    }
 
     return () => {
-      console.log("Unsubscribing from auth state changes")
-      subscription.unsubscribe()
-    }
-  }, [])
+      console.log("useAuth: Main auth useEffect CLEANUP - Unsubscribing from onAuthStateChange.");
+      subscription?.unsubscribe();
+    };
+  }, []); // Empty dependency array: runs on mount and unmount
+
+  // Separate useEffects to log state changes clearly
+  useEffect(() => {
+    console.log("useAuth DEBUG: `user` state changed to:", user ? user.id : null);
+  }, [user]);
+
+  useEffect(() => {
+    console.log("useAuth DEBUG: `loading` state changed to:", loading);
+  }, [loading]);
+
+  useEffect(() => {
+    console.log("useAuth DEBUG: `userProfile` state changed to:", userProfile ? userProfile.id : null);
+  }, [userProfile]);
+
 
   const handleSignIn = async (email: string, password: string) => {
     try {
@@ -271,24 +299,20 @@ export function useAuth() {
   }
 }
 
-// ユーザープロファイルを取得する関数
-export async function getUserProfile(userId: string) {
+export async function getUserProfile(userId: string) { // Add logs here too
+  console.log(`lib/supabase: getUserProfile - Called for userId: ${userId}`);
+  const supabase = getSupabaseClient(); // Ensure client is fresh if needed, or use passed instance
   try {
-    console.log("Getting user profile for:", userId)
-    const supabase = getSupabaseClient()
-
-    const { data, error } = await supabase.from("user_profiles").select("*").eq("user_id", userId).single()
-
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 is "no rows returned" error
-      console.error("Error fetching user profile:", error)
-      throw error
+    const { data, error } = await supabase.from("user_profiles").select("*").eq("user_id", userId).single();
+    if (error && error.code !== "PGRST116") { // PGRST116 means no rows found, not necessarily an error for this logic
+      console.error(`lib/supabase: getUserProfile - Error fetching profile for ${userId}:`, error);
+      throw error;
     }
-
-    return data
+    console.log(`lib/supabase: getUserProfile - Profile data for ${userId}:`, data);
+    return data;
   } catch (error) {
-    console.error("Error in getUserProfile:", error)
-    return null
+    console.error(`lib/supabase: getUserProfile - Exception for ${userId}:`, error);
+    return null;
   }
 }
 

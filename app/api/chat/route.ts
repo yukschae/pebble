@@ -19,34 +19,33 @@ function createServerSupabaseClient() {
 }
 
 export async function POST(req: Request) {
-  try { // <<< MAIN TRY BLOCK STARTS HERE (around line 20 in your original)
-    // APIキーが設定されているか確認
+  try {
+    console.log("/api/chat: POST request received."); // Vercel log
     if (!process.env.ANTHROPIC_API_KEY) {
-      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY is not configured" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      console.error("/api/chat: ANTHROPIC_API_KEY is not configured."); // Vercel log
+      return new Response(/* ... */);
     }
 
-    // リクエストボディを取得
     const { messages } = (await req.json()) as { messages: Message[] };
+    const supabase = createServerSupabaseClient(); // Ensure this doesn't throw if keys are missing
+    const cookieStore = cookies(); // from next/headers
 
-    // サーバーサイドのSupabaseクライアントを作成
-    const supabase = createServerSupabaseClient();
+    console.log("/api/chat: Attempting to get session."); // Vercel log
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-    // ユーザーセッションを取得
-    const cookieStore = cookies();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error("/api/chat: Error getting session:", sessionError.message); // Vercel log
+    }
+    console.log("/api/chat: Session object:", session ? `User ID: ${session.user?.id}` : "No session object"); // Vercel log
 
-    // デモモードの確認
     const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+    console.log("/api/chat: isDemo:", isDemo); // Vercel log
 
-    // ユーザーIDを取得（デモモードの場合はデモユーザーID）
     const userId = isDemo ? "demo-user-id" : session?.user?.id;
+    console.log("/api/chat: Determined userId:", userId); // Vercel log
 
     if (!userId && !isDemo) {
+      console.warn("/api/chat: Unauthorized access attempt. No userId and not in demo mode."); // Vercel log
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -138,39 +137,6 @@ export async function POST(req: Request) {
     ユーザーの質問に直接関係のない情報は開示しないでください。
     最も重要な点として、敬語はなしで同じ高校生のような、フレンドリーで親しみやすい口調を使い、ユーザーの探究活動をサポートしてください。`;
 
-    // デモモードの場合は、ハードコードされた応答を返す
-    // You had a duplicate "if (isDemo)" block here. I'm removing the outer one.
-    // The inner one is what we want.
-    if (isDemo) {
-      const demoResponse = `こんにちは！LimitFreeのAIアシスタントだよ。何か質問があれば気軽に聞いてね！
-
-パッションシャトルやクエストについて相談したいことがあれば、いつでも手伝うよ。
-
-例えば、こんなことを聞いてみてね：
-- 「アート x 人助け」のクエストを考えて
-- パッションシャトルのアイデアが欲しい
-- クエストの進め方を教えて
-- 探究活動のヒントを教えて
-
-デモモードでは実際のAI応答は制限されているけど、本番環境では完全な機能が使えるよ！`;
-
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        async start(controller) {
-          for (const char of demoResponse) {
-            // Properly format the stream chunk for AI SDK data stream
-            const streamChunk = `data: ${JSON.stringify({ type: "text", text: char })}\n\n`;
-            controller.enqueue(encoder.encode(streamChunk));
-            await new Promise((resolve) => setTimeout(resolve, 10));
-          }
-          controller.close();
-        },
-      });
-      // Standard Web API Response for a stream
-      return new Response(stream, {
-        headers: { "Content-Type": "text/event-stream; charset=utf-8" },
-      });
-    } // <<< END OF isDemo IF BLOCK
 
     // AI SDKを使用してテキストをストリーミング
     // This try...catch is for the AI call itself.
@@ -178,7 +144,7 @@ export async function POST(req: Request) {
       const result = await streamText({
         model: anthropic('claude-3-haiku-20240307'),
         messages: messages as Message[],
-        system: systemPrompt,
+        system: systemPrompt, 
         temperature: 0.7,
         maxTokens: 1000,
         onFinish: async ({ text, toolCalls, toolResults, usage, finishReason }) => {
