@@ -35,7 +35,7 @@
 "use client"
 
 import { createClient } from "@supabase/supabase-js"
-import { createContext, useEffect, useState } from "react"
+import { createContext, useEffect, useState, useContext } from "react"
 import { useRouter } from "next/navigation"
 
 // 環境変数からSupabase情報を取得
@@ -97,15 +97,9 @@ type AuthContextType = {
   updateUserProfile: (displayName: string) => Promise<any>
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  signIn: async () => null,
-  signUp: async () => null,
-  signOut: async () => false,
-  userProfile: null,
-  updateUserProfile: async () => null,
-})
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+
 
 export function useAuth() {
   const [user, setUser] = useState<any | null>(null);
@@ -114,10 +108,10 @@ export function useAuth() {
   const supabase = getSupabaseClient();
   const router = useRouter();
 
-  console.log("useAuth: Hook initialized. Initial loading state:", loading); // Log hook initialization
+  console.log("useAuth (stateful hook): Initialized. Initial loading:", loading);
 
   useEffect(() => {
-    console.log("useAuth: Main auth useEffect RUNNING/RE-RUNNING. DEMO_MODE:", DEMO_MODE);
+    console.log("useAuth (stateful hook): Main auth useEffect RUNNING. DEMO_MODE:", DEMO_MODE);
 
     if (DEMO_MODE) {
       console.log("useAuth: DEMO_MODE enabled. Setting demo user and profile.");
@@ -128,60 +122,60 @@ export function useAuth() {
       return;
     }
 
-    console.log("useAuth: Setting up onAuthStateChange listener and initial session check.");
+    console.log("useAuth (stateful hook): Setting up onAuthStateChange listener and initial session check.");
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("useAuth: onAuthStateChange triggered. Event:", event, "Session:", session ? `User ID: ${session.user.id}` : "No session");
+      console.log("useAuth (stateful hook): onAuthStateChange triggered. Event:", event, "Session:", session ? `User ID: ${session.user.id}` : "No session");
       // setLoading(true); // <<< Potentially problematic if it causes rapid re-renders or gets stuck. Let's keep it commented for now.
       if (session?.user) {
         setUser(session.user);
-        console.log(`useAuth: onAuthStateChange - User set. Attempting to get profile for ${session.user.id}`);
+        console.log(`useAuth (stateful hook): onAuthStateChange - User set. Attempting to get profile for ${session.user.id}`);
         try {
           const profile = await getUserProfile(session.user.id); // Make sure getUserProfile has its own logs
           setUserProfile(profile);
-          console.log("useAuth: onAuthStateChange - User profile fetched:", profile ? "Profile found" : "No profile");
+          console.log("useAuth (stateful hook): onAuthStateChange - User profile fetched:", profile ? "Profile found" : "No profile");
         } catch (error) {
-          console.error("useAuth: onAuthStateChange - Error fetching user profile:", error);
+          console.error("useAuth (stateful hook): onAuthStateChange - Error fetching user profile:", error);
           setUserProfile(null);
         }
       } else {
         setUser(null);
         setUserProfile(null);
-        console.log("useAuth: onAuthStateChange - User and profile set to null.");
+        console.log("useAuth (stateful hook): onAuthStateChange - User and profile set to null.");
       }
-      console.log("useAuth: onAuthStateChange - setLoading(false) for event:", event);
+      console.log("useAuth (stateful hook): onAuthStateChange - setLoading(false) for event:", event);
       setLoading(false);
     });
 
     const checkSession = async () => {
-      console.log("useAuth: checkSession - Starting initial session check.");
+      console.log("useAuth (stateful hook): checkSession - Starting initial session check.");
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
-          console.error("useAuth: checkSession - Error getting session:", sessionError);
+          console.error("useAuth (stateful hook): checkSession - Error getting session:", sessionError);
           setUser(null);
           setUserProfile(null);
         } else if (session?.user) {
           setUser(session.user);
-          console.log(`useAuth: checkSession - Session found for ${session.user.id}. Attempting to get profile.`);
+          console.log(`useAuth (stateful hook): checkSession - Session found for ${session.user.id}. Attempting to get profile.`);
           try {
             const profile = await getUserProfile(session.user.id);
             setUserProfile(profile);
-            console.log("useAuth: checkSession - User profile fetched:", profile ? "Profile found" : "No profile");
+            console.log("useAuth (stateful hook): checkSession - User profile fetched:", profile ? "Profile found" : "No profile");
           } catch (error) {
-            console.error("useAuth: checkSession - Error fetching profile in checkSession:", error);
+            console.error("useAuth (stateful hook): checkSession - Error fetching profile in checkSession:", error);
             setUserProfile(null);
           }
         } else {
           setUser(null);
           setUserProfile(null);
-          console.log("useAuth: checkSession - No active session found.");
+          console.log("useAuth (stateful hook): checkSession - No active session found.");
         }
       } catch (error) {
-        console.error("useAuth: checkSession - Exception during getSession/profile fetch:", error);
+        console.error("useAuth (stateful hook): checkSession - Exception during getSession/profile fetch:", error);
         setUser(null);
         setUserProfile(null);
       } finally {
-        console.log("useAuth: checkSession - finally block, setLoading(false)");
+        console.log("useAuth (stateful hook): checkSession - finally block, setLoading(false)");
         setLoading(false);
       }
     };
@@ -191,7 +185,7 @@ export function useAuth() {
     }
 
     return () => {
-      console.log("useAuth: Main auth useEffect CLEANUP - Unsubscribing from onAuthStateChange.");
+      console.log("useAuth (stateful hook): Main auth useEffect CLEANUP - Unsubscribing from onAuthStateChange.");
       subscription?.unsubscribe();
     };
   }, []); // Empty dependency array: runs on mount and unmount
@@ -288,16 +282,31 @@ export function useAuth() {
     }
   }
 
+  console.log("useAuth (stateful hook): Returning value.", { user: !!user, loading, profile: !!userProfile });
   return {
     user,
     userProfile,
     loading,
-    signUp: handleSignUp,
     signIn: handleSignIn,
+    signUp: handleSignUp,
     signOut: handleSignOut,
     updateUserProfile,
-  }
+  };
 }
+
+// This is the hook that components will use to CONSUME the auth state
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuthContext must be used within an AuthProvider");
+  }
+  console.log("useAuthContext (consumer hook): Consuming context:", {
+    user: !!context.user,
+    loading: context.loading,
+    profile: !!context.userProfile
+  });
+  return context;
+};
 
 export async function getUserProfile(userId: string) { // Add logs here too
   console.log(`lib/supabase: getUserProfile - Called for userId: ${userId}`);

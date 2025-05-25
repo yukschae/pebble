@@ -6,13 +6,13 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Rocket, ChevronRight, Sparkles } from "lucide-react"
 import { SignInForm } from "@/components/auth/sign-in-form"
 import { SignUpForm } from "@/components/auth/sign-up-form"
-import { useAuth } from "@/lib/supabase"
+import { useAuthContext } from "@/lib/supabase"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 
 export default function LandingPage() {
   const router = useRouter()
-  const { user, loading, signOut } = useAuth()
+  const { user, loading, signOut } = useAuthContext()
   const [showStars, setShowStars] = useState(false)
 
   useEffect(() => {
