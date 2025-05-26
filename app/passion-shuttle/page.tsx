@@ -38,6 +38,9 @@ import { getUserRiasecResults, getUserOceanResults, getLatestPassionShuttleSugge
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
+import type { PassionSuggestion } from "@/lib/types";
+
+
 export default function PassionShuttlePage() {
   const router = useRouter()
   const { user } = useAuthContext()
@@ -48,7 +51,7 @@ export default function PassionShuttlePage() {
   const [error, setError] = useState<string | null>(null)
   const [hasRiasecResults, setHasRiasecResults] = useState(false)
   const [hasOceanResults, setHasOceanResults] = useState(false)
-  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [suggestions, setSuggestions] = useState<PassionSuggestion[]>([])
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null)
   const [feedback, setFeedback] = useState("")
   const [showStars, setShowStars] = useState(false)
@@ -78,7 +81,7 @@ export default function PassionShuttlePage() {
       // 両方の結果がある場合、最新の提案を取得
       if (riasecResults && oceanResults) {
         const latestSuggestions = await getLatestPassionShuttleSuggestions(user.id)
-        if (latestSuggestions && latestSuggestions.suggestions) {
+        if (latestSuggestions) {
           setSuggestions(latestSuggestions.suggestions)
         }
       }

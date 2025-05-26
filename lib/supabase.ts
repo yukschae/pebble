@@ -37,6 +37,8 @@
 import { createClient } from "@supabase/supabase-js"
 import { createContext, useEffect, useState, useContext } from "react"
 import { useRouter } from "next/navigation"
+import type { PassionSuggestion, PassionSuggestionRow } from "@/lib/types";
+
 
 // 環境変数からSupabase情報を取得
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -585,52 +587,33 @@ export async function savePassionShuttleSuggestions(userId: string, suggestions:
 }
 
 // 最新のパッションシャトル提案を取得する関数
-export async function getLatestPassionShuttleSuggestions(userId: string) {
-  if (DEMO_MODE) {
-    // デモデータを返す
-    return {
-      suggestions: [
-        {
-          title: "アート x 人助け",
-          description: "芸術的な手法を用いて、人々の心理的・感情的な健康をサポートするアプローチ。",
-          tags: ["アートセラピー", "イベント企画", "コミュニティ支援"],
-        },
-        {
-          title: "テクノロジー x 教育",
-          description: "最新のテクノロジーを活用して、より効果的で魅力的な学習体験を提供する。",
-          tags: ["EdTech", "オンライン学習", "インタラクティブコンテンツ"],
-        },
-        {
-          title: "環境 x デザイン",
-          description: "持続可能性を考慮したデザインで、環境問題の解決に貢献する。",
-          tags: ["サステナブルデザイン", "エコプロダクト", "環境教育"],
-        },
-      ],
-    }
+function isSuggestionArray(x: unknown): x is PassionSuggestion[] {
+  return Array.isArray(x);
+}
+
+export async function getLatestPassionShuttleSuggestions(
+  userId: string,
+): Promise<PassionSuggestionRow | null> {
+  const supabase = getSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("passion_shuttle_suggestions")
+    .select("id, user_id, created_at, suggestions")   // only what you need
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();                                   // → row | null
+
+  if (error) throw error;
+  if (!data) return null;
+
+  // 💡 validate the jsonb field
+  if (!isSuggestionArray(data.suggestions)) {
+    console.warn("suggestions column is not an array:", data.suggestions);
+    return { ...data, suggestions: [] } as PassionSuggestionRow;
   }
 
-  // 通常の処理
-  try {
-    console.log("Getting latest passion shuttle suggestions for:", userId)
-    const supabase = getSupabaseClient()
-
-    const { data, error } = await supabase
-      .from("passion_shuttle_suggestions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-
-    if (error) {
-      console.error("Error fetching passion shuttle suggestions:", error)
-      throw error
-    }
-
-    return data?.[0] || null
-  } catch (error) {
-    console.error("Error getting latest passion shuttle suggestions:", error)
-    throw error instanceof Error ? error : new Error(String(error))
-  }
+  return data as PassionSuggestionRow;                // now the cast is safe
 }
 
 // パッションシャトルを保存する関数
