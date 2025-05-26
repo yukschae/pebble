@@ -125,67 +125,71 @@ export function useAuth() {
     }
 
     console.log("useAuth (stateful hook): Setting up onAuthStateChange listener and initial session check.");
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("useAuth (stateful hook): onAuthStateChange START. Event:", event, "Session:", session ? `User ID: ${session.user.id}` : "No session");
-      try { // Wrap the core logic in a try
-        if (session?.user) {
-          setUser(session.user);
-          console.log(`useAuth (stateful hook): onAuthStateChange - User state SET. Now fetching profile for ${session.user.id}`);
-          try {
-            const profile = await getUserProfile(session.user.id);
-            setUserProfile(profile);
-            console.log("useAuth (stateful hook): onAuthStateChange - User profile fetched. Profile:", profile ? "Found" : "Not found/returned");
-          } catch (profileError) {
-            console.error("useAuth (stateful hook): onAuthStateChange - ERROR fetching user profile:", profileError);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[useAuth] onAuthStateChange →", event);
+    
+      // -------- 1) user is signed in or token refreshed  ----------
+      if (session?.user) {
+        setUser(session.user);
+        setLoading(false);                
+    
+        // fetch profile in background
+        getUserProfile(session.user.id)
+          .then((p) => {
+            setUserProfile(p);
+            console.log("[useAuth] profile fetched on event:", p ? "ok" : "none");
+          })
+          .catch((err) => {
+            console.error("[useAuth] profile fetch error on event:", err);
             setUserProfile(null);
-            // Do not set loading false here, let finally handle it.
-          }
-        } else {
-          setUser(null);
-          setUserProfile(null);
-          console.log("useAuth (stateful hook): onAuthStateChange - User and profile set to NULL (no session user).");
-        }
-      } catch (e) {
-        // Catch any unexpected errors within the main try block of onAuthStateChange
-        console.error("useAuth (stateful hook): onAuthStateChange - UNEXPECTED EXCEPTION:", e);
-      } finally { // Use finally to GUARANTEE setLoading(false) is called
-        console.log("useAuth (stateful hook): onAuthStateChange FINALLY - setLoading(false). Event:", event);
-        setLoading(false);
+          });
+        return;
       }
+    
+      // -------- 2) signed out (or no session)  ----------
+      setUser(null);
+      setUserProfile(null);
+      setLoading(false);                      
     });
 
     const checkSession = async () => {
-      console.log("useAuth (stateful hook): checkSession - Starting initial session check.");
+      console.log("[useAuth] checkSession → start"); 
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          console.error("useAuth (stateful hook): checkSession - Error getting session:", sessionError);
+        const { data: { session }, error } = await supabase.auth.getSession();   
+        if (error) {
+          console.error("[useAuth] getSession error:", error);
           setUser(null);
           setUserProfile(null);
-        } else if (session?.user) {
+          setLoading(false);                
+          return;
+        }  
+        /* ---------- a session was found ---------- */
+        if (session?.user) {
           setUser(session.user);
-          console.log(`useAuth (stateful hook): checkSession - Session found for ${session.user.id}. Attempting to get profile.`);
-          try {
-            const profile = await getUserProfile(session.user.id);
-            setUserProfile(profile);
-            console.log("useAuth (stateful hook): checkSession - User profile fetched:", profile ? "Profile found" : "No profile");
-          } catch (error) {
-            console.error("useAuth (stateful hook): checkSession - Error fetching profile in checkSession:", error);
-            setUserProfile(null);
-            setLoading(false);
-          }
-        } else {
-          setUser(null);
-          setUserProfile(null);
-          console.log("useAuth (stateful hook): checkSession - No active session found.");
+          setLoading(false);            
+          getUserProfile(session.user.id)
+            .then((profile) => {
+              setUserProfile(profile);
+              console.log("[useAuth] profile fetched:", profile ? "ok" : "none");
+            })
+            .catch((err) => {
+              console.error("[useAuth] profile fetch error:", err);
+              setUserProfile(null);
+            });
+    
+          return;                            
         }
-      } catch (error) {
-        console.error("useAuth (stateful hook): checkSession - Exception during getSession/profile fetch:", error);
+  
         setUser(null);
         setUserProfile(null);
-      } finally {
-        console.log("useAuth (stateful hook): checkSession - finally block, setLoading(false)");
-        setLoading(false);
+        setLoading(false);                 
+      } catch (err) {
+        console.error("[useAuth] checkSession exception:", err);
+        setUser(null);
+        setUserProfile(null);
+        setLoading(false);                 
       }
     };
 
