@@ -52,12 +52,12 @@ import { useChat } from "@ai-sdk/react"
 import { cn } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 // 既存のインポートに追加
-import { useAuth } from "@/lib/supabase"
+import { useAuthContext } from "@/lib/supabase"
 import { getSupabaseClient } from "@/lib/supabase"
 
 export default function AIChat() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user } = useAuthContext()
   const [username] = useState(user?.email?.split("@")[0] || "ゲスト")
   const [showStars, setShowStars] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)

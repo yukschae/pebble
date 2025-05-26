@@ -36,11 +36,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, AlertCircle, ChevronRight, Loader2, MapPin, Flag, Check, Filter, Save, Star } from "lucide-react"
 import { getSelectedQuestDirection, saveQuests } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
-import { useAuth } from "@/lib/supabase"
+import { useAuthContext } from "@/lib/supabase"
 
 export default function QuestSetupPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user } = useAuthContext()
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [filtering, setFiltering] = useState(false)

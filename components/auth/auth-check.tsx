@@ -29,14 +29,14 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/supabase";
+import { useAuthContext } from "@/lib/supabase";
 
 interface AuthCheckProps {
   children: React.ReactNode;
 }
 
 export function AuthCheck({ children }: AuthCheckProps) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthContext();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   // const [loadingTimeout, setLoadingTimeout] = useState(false); // KEEP THIS COMMENTED OUT FOR NOW

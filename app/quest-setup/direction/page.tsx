@@ -38,11 +38,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, Rocket, RefreshCw, Check, Tag, AlertCircle, ChevronRight, Loader2, MapPin } from "lucide-react"
 import { getSelectedPassionShuttle, saveQuestDirection } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
-import { useAuth } from "@/lib/supabase"
+import { useAuthContext } from "@/lib/supabase"
 
 export default function QuestDirectionPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user } = useAuthContext()
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [refining, setRefining] = useState(false)

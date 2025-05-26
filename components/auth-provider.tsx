@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from 'react'; 
-import { AuthContext, useAuth as useAuthInternalHook } from "@/lib/supabase";
+import { AuthContext, useAuthContext as useAuthInternalHook } from "@/lib/supabase";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const authData = useAuthInternalHook(); // This creates the state ONCE
