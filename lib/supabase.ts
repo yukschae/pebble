@@ -124,27 +124,32 @@ export function useAuth() {
 
     console.log("useAuth (stateful hook): Setting up onAuthStateChange listener and initial session check.");
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("useAuth (stateful hook): onAuthStateChange triggered. Event:", event, "Session:", session ? `User ID: ${session.user.id}` : "No session");
-      // setLoading(true); // <<< Potentially problematic if it causes rapid re-renders or gets stuck. Let's keep it commented for now.
-      if (session?.user) {
-        setUser(session.user);
-        console.log(`useAuth (stateful hook): onAuthStateChange - User set. Attempting to get profile for ${session.user.id}`);
-        try {
-          const profile = await getUserProfile(session.user.id); // Make sure getUserProfile has its own logs
-          setUserProfile(profile);
-          console.log("useAuth (stateful hook): onAuthStateChange - User profile fetched:", profile ? "Profile found" : "No profile");
-        } catch (error) {
-          console.error("useAuth (stateful hook): onAuthStateChange - Error fetching user profile:", error);
+      console.log("useAuth (stateful hook): onAuthStateChange START. Event:", event, "Session:", session ? `User ID: ${session.user.id}` : "No session");
+      try { // Wrap the core logic in a try
+        if (session?.user) {
+          setUser(session.user);
+          console.log(`useAuth (stateful hook): onAuthStateChange - User state SET. Now fetching profile for ${session.user.id}`);
+          try {
+            const profile = await getUserProfile(session.user.id);
+            setUserProfile(profile);
+            console.log("useAuth (stateful hook): onAuthStateChange - User profile fetched. Profile:", profile ? "Found" : "Not found/returned");
+          } catch (profileError) {
+            console.error("useAuth (stateful hook): onAuthStateChange - ERROR fetching user profile:", profileError);
+            setUserProfile(null);
+            // Do not set loading false here, let finally handle it.
+          }
+        } else {
+          setUser(null);
           setUserProfile(null);
-          setLoading(false);
+          console.log("useAuth (stateful hook): onAuthStateChange - User and profile set to NULL (no session user).");
         }
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        console.log("useAuth (stateful hook): onAuthStateChange - User and profile set to null.");
+      } catch (e) {
+        // Catch any unexpected errors within the main try block of onAuthStateChange
+        console.error("useAuth (stateful hook): onAuthStateChange - UNEXPECTED EXCEPTION:", e);
+      } finally { // Use finally to GUARANTEE setLoading(false) is called
+        console.log("useAuth (stateful hook): onAuthStateChange FINALLY - setLoading(false). Event:", event);
+        setLoading(false);
       }
-      console.log("useAuth (stateful hook): onAuthStateChange - setLoading(false) for event:", event);
-      setLoading(false);
     });
 
     const checkSession = async () => {
@@ -310,20 +315,24 @@ export const useAuthContext = () => {
   return context;
 };
 
-export async function getUserProfile(userId: string) { // Add logs here too
-  console.log(`lib/supabase: getUserProfile - Called for userId: ${userId}`);
-  const supabase = getSupabaseClient(); // Ensure client is fresh if needed, or use passed instance
+export async function getUserProfile(userId: string) {
+  console.log(`lib/supabase: getUserProfile START - Called for userId: ${userId}`);
+  const supabase = getSupabaseClient();
   try {
+    console.log(`lib/supabase: getUserProfile - ABOUT TO CALL Supabase for profile: ${userId}`);
     const { data, error } = await supabase.from("user_profiles").select("*").eq("user_id", userId).single();
-    if (error && error.code !== "PGRST116") { // PGRST116 means no rows found, not necessarily an error for this logic
-      console.error(`lib/supabase: getUserProfile - Error fetching profile for ${userId}:`, error);
-      throw error;
+    // Log after the await completes
+    console.log(`lib/supabase: getUserProfile - Supabase call COMPLETED for ${userId}. Error object:`, error, "Data object:", data);
+
+    if (error && error.code !== "PGRST116") { // PGRST116 means "No rows found", which is not a fatal error here.
+      console.error(`lib/supabase: getUserProfile - Supabase query error (and not PGRST116) for ${userId}: Code: ${error.code}, Message: ${error.message}, Details: ${error.details}, Hint: ${error.hint}`);
+      throw error; // Re-throw to be caught by the outer catch if necessary, or handled by useAuth
     }
-    console.log(`lib/supabase: getUserProfile - Profile data for ${userId}:`, data);
+    console.log(`lib/supabase: getUserProfile SUCCESS - Profile data for ${userId}:`, data ? "Data found" : "No data (null or PGRST116)");
     return data;
-  } catch (error) {
-    console.error(`lib/supabase: getUserProfile - Exception for ${userId}:`, error);
-    return null;
+  } catch (errorCaught) { // Renamed to avoid confusion with 'error' from Supabase response
+    console.error(`lib/supabase: getUserProfile OVERALL EXCEPTION for ${userId}:`, errorCaught);
+    throw errorCaught; // Re-throw so the caller in useAuth (onAuthStateChange or checkSession) is aware
   }
 }
 
