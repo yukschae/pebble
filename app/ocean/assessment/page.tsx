@@ -36,10 +36,11 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { ChevronLeft, ChevronRight, Check, AlertCircle } from "lucide-react"
 import { oceanQuestions, calculateOceanScores, generateOceanInterpretation } from "@/lib/ocean-data"
-import { saveOceanResponses, saveOceanResults } from "@/lib/supabase"
+import { saveOceanResponses, saveOceanResults, useAuthContext } from "@/lib/supabase"
 
 export default function OceanAssessment() {
   const router = useRouter()
+  const { user } = useAuthContext()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [responses, setResponses] = useState<Record<string, number>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -108,9 +109,12 @@ export default function OceanAssessment() {
         timestamp: new Date().toISOString(),
       }
 
-      // ユーザーIDはアプリケーションの認証システムから取得する必要があります
-      // この例では簡略化のため、ハードコードしています
-      const userId = "ユーダイ" // 実際の実装では認証済みユーザーIDを使用
+      if (!user) {                      
+        setError("ログイン状態が確認できません。再度ログインしてください。")
+        setIsSubmitting(false)
+        return
+    }
+    const userId = user.id            
 
       // 回答と結果をデータベースに保存
       await saveOceanResponses(userId, responses)

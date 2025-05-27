@@ -36,13 +36,14 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, Check, AlertCircle } from "lucide-react"
 import { riasecQuestions, calculateRiasecResults } from "@/lib/riasec-data"
-import { saveRiasecResponses, saveRiasecResults, checkTablesExist } from "@/lib/supabase"
+import { getSupabaseClient, saveRiasecResponses, saveRiasecResults, checkTablesExist, useAuthContext } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function RiasecAssessment() {
   const router = useRouter()
+  const { user } = useAuthContext()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [responses, setResponses] = useState<Record<number, number>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -98,10 +99,11 @@ export default function RiasecAssessment() {
     setIsSubmitting(true)
 
     try {
-      // ユーザーIDはアプリケーションの認証システムから取得する必要があります
-      // この例では簡略化のため、ハードコードしています
-      const userId = "ユーダイ" // 実際の実装では認証済みユーザーIDを使用
-
+      if (!user) {                      
+          setError("ログイン状態が確認できません。再度ログインしてください。")
+          return
+      }
+      const userId = user.id                   
       console.log("Starting Supabase operations...")
 
       try {
