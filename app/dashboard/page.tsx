@@ -367,7 +367,7 @@ export default function Dashboard() {
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium">{userProfile?.display_name || user?.email}</div>
-                <div className="text-xs text-gray-400">レベル 5</div>
+                <div className="text-xs text-gray-400">レベル 1</div>
               </div>
               <button
                 onClick={handleSignOut}
@@ -621,7 +621,7 @@ export default function Dashboard() {
                   transition={{ duration: 0.5, delay: 1 }}
                 >
                   <h3 className="text-xl font-bold text-foreground">モンスターレベル</h3>
-                  <div className="text-cyan-400 font-bold mt-1">レベル 2</div>
+                  <div className="text-cyan-400 font-bold mt-1">レベル 1</div>
                 </motion.div>
               </motion.div>
 
@@ -734,7 +734,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex justify-between items-center mt-2">
                         <div className="text-xs text-muted-foreground">次のレベルまで</div>
-                        <div className="text-amber-400 font-bold">13/20 XP</div>
+                        <div className="text-amber-400 font-bold">0/20 XP</div>
                       </div>
                     </div>
                   </div>

@@ -39,6 +39,15 @@ import { createContext, useEffect, useState, useContext } from "react"
 import { useRouter } from "next/navigation"
 import type { PassionSuggestion, PassionSuggestionRow } from "@/lib/types";
 
+export const getSupabaseClientWithAuth = (accessToken?: string) =>
+  createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    accessToken
+      ? { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+      : {},
+  )
+
 
 // 環境変数からSupabase情報を取得
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -661,42 +670,27 @@ export async function savePassionShuttle(userId: string, title: string, descript
 }
 
 // 選択されたパッションシャトルを取得する関数
-export async function getSelectedPassionShuttle(userId: string) {
-  if (DEMO_MODE) {
-    // デモデータを返す
-    return {
-      id: 1,
-      user_id: "demo-user-id",
-      title: "アート x 人助け",
-      description: "芸術的な手法を用いて、人々の心理的・感情的な健康をサポートするアプローチ。",
-      tags: ["アートセラピー", "イベント企画", "コミュニティ支援"],
-      selected: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-  }
-
-  // 通常の処理
+export async function getSelectedPassionShuttle(
+  userId: string,
+  accessToken?: string,   // ← ページ側で取得した JWT をそのまま渡す
+) {
   try {
-    console.log("Getting selected passion shuttle for:", userId)
-    const supabase = getSupabaseClient()
+    const supabase = accessToken
+      ? getSupabaseClientWithAuth(accessToken)
+      : getSupabaseClient()                            // cookie セッション用
 
     const { data, error } = await supabase
       .from("passion_shuttles")
       .select("*")
       .eq("user_id", userId)
       .eq("selected", true)
-      .limit(1)
+      .single()                                        // 0 行なら error.code = PGRST116
 
-    if (error) {
-      console.error("Error fetching selected passion shuttle:", error)
-      throw error
-    }
-
-    return data?.[0] || null
-  } catch (error) {
-    console.error("Error getting selected passion shuttle:", error)
-    throw error instanceof Error ? error : new Error(String(error))
+    if (error && error.code !== "PGRST116") throw error
+    return data ?? null                                // 見つからなければ null
+  } catch (err) {
+    console.error("[supabase] getSelectedPassionShuttle error:", err)
+    throw err
   }
 }
 

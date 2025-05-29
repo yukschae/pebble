@@ -1,32 +1,63 @@
-import { savePassionShuttle } from "@/lib/supabase"
+/**
+ * パッションシャトル保存 API
+ * POST /api/passion-shuttle/save
+ */
 
-export async function POST(req: Request) {
+import { NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+
+export async function POST(req: NextRequest) {
+  /* 1. body */
+  const { title, description, tags } = await req.json()
+  if (!title || !description || !tags)
+    return NextResponse.json(
+      { error: "title, description, and tags are required" },
+      { status: 400 },
+    )
+
+  /* 2. Supabase client */
+  const token = req.headers.get("authorization")?.replace("Bearer ", "") ?? undefined
+  const supabase =
+    token
+      ? createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          { global: { headers: { Authorization: `Bearer ${token}` } } },
+        )
+      : createRouteHandlerClient({ cookies })
+
+  /* 3. user id */
+  let userId: string | null = null
+  if (token) {
+    const { data } = await supabase.auth.getUser()
+    userId = data.user?.id ?? null
+  } else {
+    const { data } = await supabase.auth.getSession()
+    userId = data.session?.user?.id ?? null
+  }
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  /* 4. save directly */
   try {
-    // リクエストボディを取得
-    const { userId, title, description, tags } = await req.json()
-
-    if (!userId || !title || !description || !tags) {
-      return new Response(JSON.stringify({ error: "User ID, title, description, and tags are required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      })
-    }
-
-    // パッションシャトルを保存
-    await savePassionShuttle(userId, title, description, tags)
-
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    })
-  } catch (error) {
-    console.error("Error in passion shuttle save API:", error)
-    return new Response(
-      JSON.stringify({
-        error: "An unexpected error occurred",
-        details: error instanceof Error ? error.message : String(error),
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+    await supabase.from("passion_shuttles").upsert(
+      {
+        user_id: userId,
+        title,
+        description,
+        tags,
+        selected: true,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }, // one shuttle per user
+    )
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error("[save] db error:", err)
+    return NextResponse.json(
+      { error: "Failed to save passion shuttle", details: (err as Error).message },
+      { status: 500 },
     )
   }
 }
