@@ -87,12 +87,13 @@ export async function POST(req: NextRequest) {
     /* ── 5. craft prompt ────────────────────────────────────────── */
     const prompt = `
 あなたはキャリア教育アプリのAIアシスタントです。以下の「パッションシャトル」提案をユーザーの
-フィードバックに基づき洗練してください。
+フィードバックに基づき洗練してください。▼ パッションシャトルとは
+ユーザーの興味を掛け合わせて生み出す、将来に繋がり社会に貢献できる興味=探究テーマ。重要なのは、具体的な職業名ではなく、「アートx心理学」のようにより抽象的でクリエイティブな「興味」をタイトルとすること。詳細説明では、具体的なイメージと社会との繋がりの可能性をいくつか例示する。中学生でもわかるレベルの言葉で回答すること。
 
 ▼ ユーザー情報
 - 名前          : ${profile?.display_name ?? "ゲスト"}
 - RIASECタイプ   : ${riasecCode}
-
+git 
 ▼ 現在の提案
 ${JSON.stringify(latest, null, 2)}
 
@@ -100,12 +101,14 @@ ${JSON.stringify(latest, null, 2)}
 ${feedback}
 
 ▼ 指示
-1. 3件の提案それぞれを改善せよ。
+1. 5件の提案それぞれを改善せよ。
 2. 各提案は { "title", "description", "tags": [] } を含む。
 3. 回答は **下記 JSON フォーマットのみ** で返すこと。
 
 {
   "suggestions": [
+    { "title": "", "description": "", "tags": [] },
+    { "title": "", "description": "", "tags": [] },
     { "title": "", "description": "", "tags": [] },
     { "title": "", "description": "", "tags": [] },
     { "title": "", "description": "", "tags": [] }
