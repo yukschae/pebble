@@ -1,40 +1,28 @@
-/**
- * パッションシャトル提案 API
- * POST /api/passion-shuttle/suggest
- */
-
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 
-export const maxDuration = 30 // Vercel edge-function timeout
+export const maxDuration = 30
 
-/* ────────────────────────────────────────────────────────────────── */
-/* Helpers                                                            */
-/* ────────────────────────────────────────────────────────────────── */
-
-function anthroHeaders(apiKey: string) {
+function anthropicHeaders(key: string) {
   return {
     "Content-Type": "application/json",
-    "x-api-key": apiKey,
+    "x-api-key": key,
     "anthropic-version": "2023-06-01",
   }
 }
 
-/* ────────────────────────────────────────────────────────────────── */
-/* Route handler                                                      */
-/* ────────────────────────────────────────────────────────────────── */
-
 export async function POST(req: NextRequest) {
-  /* 1. environment checks */
-  if (!process.env.ANTHROPIC_API_KEY)
+  /* ── 0. env check ─────────────────────────────────────────────── */
+  if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "ANTHROPIC_API_KEY is not configured" },
       { status: 500 },
     )
+  }
 
-  /* 2. build Supabase client (with or without JWT) */
+  /* ── 1. build Supabase client ─────────────────────────────────── */
   const token = req.headers.get("authorization")?.replace("Bearer ", "") ?? undefined
 
   const supabase =
@@ -46,12 +34,26 @@ export async function POST(req: NextRequest) {
         )
       : createRouteHandlerClient({ cookies })
 
-  /* 3. verify user */
-  const { data: userData, error: userErr } = await supabase.auth.getUser(token)
-  if (userErr || !userData?.user)
+  /* ── 2. verify user (dual path) ───────────────────────────────── */
+  let userId: string | null = null
+  let supaErr: Error | null = null
+
+  if (token) {
+    /* header JWT path */
+    const { data, error } = await supabase.auth.getUser()
+    supaErr = error ?? null
+    userId  = data.user?.id ?? null
+  } else {
+    /* cookie session path */
+    const { data, error } = await supabase.auth.getSession()
+    supaErr = error ?? null
+    userId  = data.session?.user?.id ?? null
+  }
+
+  if (supaErr) console.warn("[passion-shuttle] supabase auth warning:", supaErr.message)
+  if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const userId = userData.user.id
 
   try {
     /* 4. fetch auxiliary user data in parallel --------------------- */
@@ -114,7 +116,7 @@ export async function POST(req: NextRequest) {
     /* 6. call Anthropic ------------------------------------------- */
     const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: anthroHeaders(process.env.ANTHROPIC_API_KEY!),
+      headers: anthropicHeaders(process.env.ANTHROPIC_API_KEY!),
       body: JSON.stringify({
         model: "claude-3-haiku-20240307",
         messages: [{ role: "user", content: prompt }],

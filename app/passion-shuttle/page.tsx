@@ -34,7 +34,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, Rocket, RefreshCw, Check, Tag, AlertCircle, Sparkles, ChevronRight, Loader2 } from "lucide-react"
-import { getUserRiasecResults, getUserOceanResults, getLatestPassionShuttleSuggestions } from "@/lib/supabase"
+import { getUserRiasecResults, getUserOceanResults, getLatestPassionShuttleSuggestions, getSupabaseClient } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
@@ -44,6 +44,14 @@ import type { PassionSuggestion } from "@/lib/types";
 export default function PassionShuttlePage() {
   const router = useRouter()
   const { user } = useAuthContext()
+
+  const [token, setToken] = useState<string | null>(null)        
+  useEffect(() => {
+    getSupabaseClient().auth
+      .getSession()
+      .then(({ data }) => setToken(data.session?.access_token ?? null))
+  }, [])  
+
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [refining, setRefining] = useState(false)
@@ -93,141 +101,97 @@ export default function PassionShuttlePage() {
     }
   }
 
+  const authHeaders = (): HeadersInit => ({
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  })                               // ★
+      
   // パッションシャトル提案の生成
   const generateSuggestions = async () => {
     if (!user) return
-
     try {
       setGenerating(true)
       setError(null)
 
-      const response = await fetch("/api/passion-shuttle/suggest", {
+      const res = await fetch("/api/passion-shuttle/suggest", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId: user.id }),
+        headers: authHeaders(),                          // ★
+        body: JSON.stringify({}),
       })
 
-      const responseText = await response.text()
+      const txt = await res.text()
+      const data = JSON.parse(txt)
 
-      let data
-      try {
-        data = JSON.parse(responseText)
-      } catch (parseError) {
-        console.error("Failed to parse response:", responseText)
-        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`)
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || "提案の生成に失敗しました。")
-      }
-
+      if (!res.ok) throw new Error(data.error || "提案の生成に失敗しました。")
       setSuggestions(data.suggestions)
       setSelectedSuggestion(null)
-    } catch (error) {
-      console.error("Error generating suggestions:", error)
-      setError(`提案の生成中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`)
+    } catch (e) {
+      console.error(e)
+      setError(`提案の生成中にエラーが発生しました: ${(e as Error).message}`)
     } finally {
       setGenerating(false)
     }
   }
 
-  // パッションシャトル提案の修正
+  /* ─────────────────────────────────────────────────────────────── */
+  /* refine                                                         */
   const refineSuggestions = async () => {
     if (!user) return
+    if (!feedback.trim()) return setError("フィードバックを入力してください。")
 
     try {
-      if (!feedback.trim()) {
-        setError("フィードバックを入力してください。")
-        return
-      }
-
       setRefining(true)
       setError(null)
 
-      const response = await fetch("/api/passion-shuttle/refine", {
+      const res  = await fetch("/api/passion-shuttle/refine", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId: user.id, feedback }),
+        headers: authHeaders(),                          // ★
+        body: JSON.stringify({ feedback }),
       })
 
-      const responseText = await response.text()
+      const txt  = await res.text()
+      const data = JSON.parse(txt)
 
-      let data
-      try {
-        data = JSON.parse(responseText)
-      } catch (parseError) {
-        console.error("Failed to parse response:", responseText)
-        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`)
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || "提案の修正に失敗しました。")
-      }
-
+      if (!res.ok) throw new Error(data.error || "提案の修正に失敗しました。")
       setSuggestions(data.suggestions)
       setSelectedSuggestion(null)
       setFeedback("")
-    } catch (error) {
-      console.error("Error refining suggestions:", error)
-      setError(`提案の修正中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`)
+    } catch (e) {
+      console.error(e)
+      setError(`提案の修正中にエラーが発生しました: ${(e as Error).message}`)
     } finally {
       setRefining(false)
     }
   }
 
-  // パッションシャトルの保存
+  /* ─────────────────────────────────────────────────────────────── */
+  /* save                                                           */
   const savePassionShuttle = async () => {
-    if (!user) return
+    if (!user || selectedSuggestion === null) return
 
     try {
-      if (selectedSuggestion === null) {
-        setError("パッションシャトルを選択してください。")
-        return
-      }
-
       setSaving(true)
       setError(null)
 
-      const suggestion = suggestions[selectedSuggestion]
-
-      const response = await fetch("/api/passion-shuttle/save", {
+      const s = suggestions[selectedSuggestion]
+      const res = await fetch("/api/passion-shuttle/save", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(),                          // ★
         body: JSON.stringify({
-          userId: user.id,
-          title: suggestion.title,
-          description: suggestion.description,
-          tags: suggestion.tags,
+          title: s.title,
+          description: s.description,
+          tags: s.tags,
         }),
       })
 
-      const responseText = await response.text()
+      const txt = await res.text()
+      const data = JSON.parse(txt)
+      if (!res.ok) throw new Error(data.error || "保存に失敗しました。")
 
-      let data
-      try {
-        data = JSON.parse(responseText)
-      } catch (parseError) {
-        console.error("Failed to parse response:", responseText)
-        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`)
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || "パッションシャトルの保存に失敗しました。")
-      }
-
-      // ダッシュボードにリダイレクト
       router.push("/dashboard")
-    } catch (error) {
-      console.error("Error saving passion shuttle:", error)
-      setError(
-        `パッションシャトルの保存中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
-      )
+    } catch (e) {
+      console.error(e)
+      setError(`保存中にエラーが発生しました: ${(e as Error).message}`)
     } finally {
       setSaving(false)
     }
