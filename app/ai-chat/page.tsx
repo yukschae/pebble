@@ -1,33 +1,24 @@
 /*  AI Chat page — simplified, no demo-mode  */
 "use client"
-
 import { useState, useRef, useEffect, FormEvent, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Home,
-  Award,
-  MessageCircle,
-  MoreHorizontal,
-  ChevronDown,
-  Send,
-  Sparkles,
-  Flame,
-  Diamond,
-  ChevronLeft,
-  AlertCircle,
+  Home, Award, MessageCircle, MoreHorizontal, ChevronDown, Send,
+  Sparkles, Flame, Diamond, ChevronLeft, AlertCircle,
 } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { useChat } from "@ai-sdk/react"
 import ReactMarkdown from "react-markdown"
 import { cn } from "@/lib/utils"
 import { useAuthContext, getSupabaseClient } from "@/lib/supabase"
 
 export default function AIChat() {
-  /* ── auth & routing ─────────────────────────────────────────────── */
+  /* ── auth -------------------------------------------------------- */
   const { user, loading } = useAuthContext()
   const router             = useRouter()
   const [token, setToken]   = useState<string | null>(null)
 
+  /* fetch the JWT once */
   useEffect(() => {
     if (loading) return
     getSupabaseClient().auth
@@ -35,14 +26,7 @@ export default function AIChat() {
       .then(({ data }) => setToken(data.session?.access_token ?? null))
   }, [loading])
 
-  if (loading || !token)
-    return (
-      <div className="flex h-screen items-center justify-center text-white">
-        初期化中…
-      </div>
-    )
-
-  /* ── chat hook ──────────────────────────────────────────────────── */
+  /* ── chat hook (called on every render) -------------------------- */
   const {
     messages,
     input,
@@ -51,47 +35,44 @@ export default function AIChat() {
     isLoading,
     error: chatErr,
     reload,
-    setMessages,
   } = useChat({
     api: "/api/chat",
-    headers: { Authorization: `Bearer ${token}` },
-    onResponse: (r) => {                   
-      if (!r.ok) console.error("API error:", r.status, r.statusText)
-    },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    onResponse: (r) => { if (!r.ok) console.error("API error:", r.status) },
   })
 
-  /* ── local ui state ─────────────────────────────────────────────── */
-  const [uiErr, setUiErr]   = useState<string | null>(null)
+  /* ── local ui state ---------------------------------------------- */
+  const [uiErr, setUiErr] = useState<string | null>(null)
   const [isTyping, setTyping] = useState(false)
-  const endRef              = useRef<HTMLDivElement>(null)
+  const endRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, isTyping])
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }) },
+    [messages, isTyping])
 
   useEffect(() => {
     if (chatErr) setUiErr(`AIアシスタントとの通信に問題が発生しました: ${chatErr.message}`)
   }, [chatErr])
 
-  /* ── helpers ────────────────────────────────────────────────────── */
-  const username = user!.email!.split("@")[0]
-
+  /* helpers */
+  const username = user?.email?.split("@")[0] ?? "ゲスト"
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!input.trim()) return
     setUiErr(null)
-    try {
-      handleSubmit(e)
-      setTyping(true)
-      setTimeout(() => setTyping(false), 1000)
-    } catch (err) {
-      setUiErr(`送信中にエラー: ${(err as Error).message}`)
-    }
+    handleSubmit(e)
+    setTyping(true)
+    setTimeout(() => setTyping(false), 900)
   }
+  const sendSuggestion = (s: string) =>
+    handleInputChange({ target: { value: s } } as ChangeEvent<HTMLInputElement>)
 
-  const sendSuggestion = (text: string) =>
-    handleInputChange({ target: { value: text } } as ChangeEvent<HTMLInputElement>)
-
+  /* ── RENDER ------------------------------------------------------ */
+  if (loading || !token)
+    return (
+      <div className="flex h-screen items-center justify-center text-white">
+        初期化中…
+      </div>
+    )
   /* ── render ─────────────────────────────────────────────────────── */
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 text-gray-100">
@@ -202,7 +183,7 @@ export default function AIChat() {
                 <div className="flex-1">{uiErr}</div>
                 {messages.length > 0 && (
                   <button
-                  onClick={() => reload()} 
+                    onClick={() => reload()} 
                     className="ml-4 px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-md text-sm"
                   >
                     再試行
