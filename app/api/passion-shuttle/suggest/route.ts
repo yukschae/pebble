@@ -86,8 +86,7 @@ export async function POST(req: NextRequest) {
 あなたはキャリア教育アプリのAIアシスタントです。ユーザーの「パッションシャトル」を提案します。
 
 ▼ パッションシャトルとは
-ユーザーの興味を掛け合わせて生み出す新しい活動・探究テーマ
-例: 「音楽 x プログラミング」「環境問題 x デザイン」「スポーツ x 国際交流」
+ユーザーの興味を掛け合わせて生み出す、将来に繋がり社会に貢献できる興味=探究テーマ。重要なのは、具体的な職業名ではなく、「アートx心理学」のようにより抽象的でクリエイティブな「興味」をタイトルとすること。詳細説明では、具体的なイメージと社会との繋がりの可能性をいくつか例示する。
 
 ▼ ユーザー情報
 - 名前: ${profile?.display_name ?? "ゲスト"}
@@ -96,7 +95,7 @@ export async function POST(req: NextRequest) {
 - OCEAN詳細:  ${oceanDetail}
 
 ▼ 指示
-1. ユーザーの興味・特性を踏まえて **3件** のパッションシャトルを提案せよ。
+1. ユーザーの興味・特性を踏まえて **5件** のパッションシャトルを提案せよ。
 2. 提案ごとに以下のキーを含むこと:
    - title        : タイトル
    - description  : 詳細説明
@@ -106,6 +105,8 @@ export async function POST(req: NextRequest) {
 ▼ フォーマット
 {
   "suggestions": [
+    { "title": "", "description": "", "tags": [] },
+    { "title": "", "description": "", "tags": [] },
     { "title": "", "description": "", "tags": [] },
     { "title": "", "description": "", "tags": [] },
     { "title": "", "description": "", "tags": [] }
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest) {
         model: "claude-3-haiku-20240307",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 1500,
       }),
     })
 

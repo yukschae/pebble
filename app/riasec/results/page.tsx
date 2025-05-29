@@ -44,7 +44,7 @@ import {
   ClipboardList,
   AlertCircle,
 } from "lucide-react"
-import { getUserRiasecResults } from "@/lib/supabase"
+import { getUserRiasecResults, useAuthContext } from "@/lib/supabase"
 import { riasecDimensions } from "@/lib/riasec-data"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -63,8 +63,9 @@ import {
 
 export default function RiasecResults() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuthContext() 
   const [results, setResults] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [resultsLoading, setResultsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showStars, setShowStars] = useState(false)
   const [debugInfo, setDebugInfo] = useState<any>(null)
@@ -73,10 +74,17 @@ export default function RiasecResults() {
     setShowStars(true)
 
     async function fetchResults() {
-      try {
-        // ユーザーIDはアプリケーションの認証システムから取得する必要があります
-        // この例では簡略化のため、ハードコードしています
-        const userId = "ユーダイ" // 実際の実装では認証済みユーザーIDを使用
+
+        if (authLoading) return
+        
+        try {
+        if (!user) {
+           setError("ログイン情報が確認できません。再度ログインしてください。")
+           setResultsLoading(false)
+           return
+        }
+        
+        const userId = user.id  
 
         console.log("Fetching RIASEC results for user:", userId)
 
@@ -107,12 +115,12 @@ export default function RiasecResults() {
         console.error("Error in fetchResults:", err)
         setError("予期せぬエラーが発生しました。")
       } finally {
-        setLoading(false)
+        setResultsLoading(false)
       }
     }
 
     fetchResults()
-  }, [])
+    }, [authLoading, user]) 
 
   // 結果データをチャート用に変換
   const getPieChartData = () => {
@@ -297,7 +305,7 @@ export default function RiasecResults() {
             </div>
           </div>
 
-          {loading ? (
+          {resultsLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>

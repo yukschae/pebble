@@ -35,7 +35,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { ChevronLeft, Download, Share2, AlertCircle, Info } from "lucide-react"
 import { oceanFactors, sortFactorsByScore, suggestOceanCareers } from "@/lib/ocean-data"
-import { getUserOceanResults } from "@/lib/supabase"
+import { getUserOceanResults , useAuthContext } from "@/lib/supabase"
 import {
   RadarChart,
   PolarGrid,
@@ -54,6 +54,7 @@ import {
 
 export default function OceanResults() {
   const router = useRouter()
+  const { user, loading: authLoading} = useAuthContext()
   const [results, setResults] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,13 +62,19 @@ export default function OceanResults() {
 
   useEffect(() => {
     async function fetchResults() {
+      if (authLoading) return 
+
       try {
         setLoading(true)
         setError(null)
 
-        // ユーザーIDはアプリケーションの認証システムから取得する必要があります
-        // この例では簡略化のため、ハードコードしています
-        const userId = "ユーダイ" // 実際の実装では認証済みユーザーIDを使用
+        if (!user) {
+          setError("ログイン情報が確認できません。再度ログインしてください。")
+          setLoading(false)
+          return
+          }
+        
+        const userId = user.id   
 
         const data = await getUserOceanResults(userId)
 
@@ -86,7 +93,7 @@ export default function OceanResults() {
     }
 
     fetchResults()
-  }, [])
+  }, [authLoading, user])
 
   // サンプルデータを表示
   const handleShowSampleData = () => {

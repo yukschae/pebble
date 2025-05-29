@@ -181,7 +181,7 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            心から幸せな未来を共に創る、
+            LimitFreeプログラム
             <br />
             探究型キャリア教育ソフト
           </motion.h1>
