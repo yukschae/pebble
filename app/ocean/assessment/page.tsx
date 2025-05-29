@@ -113,12 +113,18 @@ export default function OceanAssessment() {
         setError("ログイン状態が確認できません。再度ログインしてください。")
         setIsSubmitting(false)
         return
-    }
+      }
+
     const userId = user.id            
 
       // 回答と結果をデータベースに保存
+      console.log("Saving results...")
       await saveOceanResponses(userId, responses)
+      console.log("Results saved successfully")
+
+      console.log("Saving results...")
       await saveOceanResults(userId, results)
+      console.log("Results saved successfully")
 
       // 結果ページにリダイレクト
       router.push("/ocean/results")
