@@ -108,36 +108,7 @@ export const oceanQuestions = [
     factor: "O",
     reverse: false,
   },
-  {
-    id: "O6",
-    text: "日常的な習慣や決まりきったやり方を好む",
-    factor: "O",
-    reverse: true,
-  },
-  {
-    id: "O7",
-    text: "哲学的な議論や深い思索に興味がある",
-    factor: "O",
-    reverse: false,
-  },
-  {
-    id: "O8",
-    text: "芸術作品（絵画、音楽、文学など）に感動することがある",
-    factor: "O",
-    reverse: false,
-  },
-  {
-    id: "O9",
-    text: "複雑な問題を解決するのが好きだ",
-    factor: "O",
-    reverse: false,
-  },
-  {
-    id: "O10",
-    text: "新しい趣味や活動に挑戦するのが好きだ",
-    factor: "O",
-    reverse: false,
-  },
+
 
   // 誠実性 (C)
   {
@@ -167,36 +138,6 @@ export const oceanQuestions = [
   {
     id: "C5",
     text: "目標を達成するために努力し続けることができる",
-    factor: "C",
-    reverse: false,
-  },
-  {
-    id: "C6",
-    text: "物事を先延ばしにすることがよくある",
-    factor: "C",
-    reverse: true,
-  },
-  {
-    id: "C7",
-    text: "自分の責任を果たすことを重要視している",
-    factor: "C",
-    reverse: false,
-  },
-  {
-    id: "C8",
-    text: "効率的に作業を進めることができる",
-    factor: "C",
-    reverse: false,
-  },
-  {
-    id: "C9",
-    text: "自分の行動に対して責任を持つことができる",
-    factor: "C",
-    reverse: false,
-  },
-  {
-    id: "C10",
-    text: "計画通りに物事を進めるのが好きだ",
     factor: "C",
     reverse: false,
   },
@@ -232,36 +173,7 @@ export const oceanQuestions = [
     factor: "E",
     reverse: false,
   },
-  {
-    id: "E6",
-    text: "一人で過ごす時間が好きだ",
-    factor: "E",
-    reverse: true,
-  },
-  {
-    id: "E7",
-    text: "活発で、エネルギッシュだと思う",
-    factor: "E",
-    reverse: false,
-  },
-  {
-    id: "E8",
-    text: "会話を始めるのが得意だ",
-    factor: "E",
-    reverse: false,
-  },
-  {
-    id: "E9",
-    text: "人前で話すのが苦にならない",
-    factor: "E",
-    reverse: false,
-  },
-  {
-    id: "E10",
-    text: "冒険や刺激を求める傾向がある",
-    factor: "E",
-    reverse: false,
-  },
+  
 
   // 協調性 (A)
   {
@@ -285,42 +197,6 @@ export const oceanQuestions = [
   {
     id: "A4",
     text: "協力して作業することが好きだ",
-    factor: "A",
-    reverse: false,
-  },
-  {
-    id: "A5",
-    text: "人との対立や争いを避けようとする",
-    factor: "A",
-    reverse: false,
-  },
-  {
-    id: "A6",
-    text: "時々、他人に対して批判的になることがある",
-    factor: "A",
-    reverse: true,
-  },
-  {
-    id: "A7",
-    text: "他人の意見や立場を尊重することができる",
-    factor: "A",
-    reverse: false,
-  },
-  {
-    id: "A8",
-    text: "思いやりがあると言われることが多い",
-    factor: "A",
-    reverse: false,
-  },
-  {
-    id: "A9",
-    text: "人間関係において寛容さを大切にしている",
-    factor: "A",
-    reverse: false,
-  },
-  {
-    id: "A10",
-    text: "他人の幸せを願う気持ちが強い",
     factor: "A",
     reverse: false,
   },
@@ -353,36 +229,6 @@ export const oceanQuestions = [
   {
     id: "N5",
     text: "批判されると落ち込むことが多い",
-    factor: "N",
-    reverse: false,
-  },
-  {
-    id: "N6",
-    text: "困難な状況でも冷静さを保つことができる",
-    factor: "N",
-    reverse: true,
-  },
-  {
-    id: "N7",
-    text: "小さなことでもイライラすることがある",
-    factor: "N",
-    reverse: false,
-  },
-  {
-    id: "N8",
-    text: "将来について不安に感じることが多い",
-    factor: "N",
-    reverse: false,
-  },
-  {
-    id: "N9",
-    text: "気分の変動が激しいと感じることがある",
-    factor: "N",
-    reverse: false,
-  },
-  {
-    id: "N10",
-    text: "プレッシャーを感じると混乱することがある",
     factor: "N",
     reverse: false,
   },
