@@ -99,8 +99,7 @@ export default function LandingPage() {
                 <span className="text-white font-bold text-lg tracking-wide">LimitFree</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-blue-500 to-indigo-500 text-transparent bg-clip-text leading-tight">
-                LimitFreeプログラム
-                <br>探究型キャリア教育アプリ</br>
+                LimitFreeプログラム、探究型キャリア教育アプリ
               </h1>
               <p className="text-xl text-gray-300 mb-8">
                 あなたの情熱と才能を宇宙に打ち上げ、未知の可能性を探索する旅に出かけましょう。
