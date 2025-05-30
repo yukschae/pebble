@@ -629,7 +629,7 @@ export default function LandingPage() {
                 </div>
                 <span className="text-foreground font-bold text-xl tracking-wide">LimitFree</span>
               </div>
-              <p className="text-muted-foreground mb-4">心から幸せな未来を共に創る、探究型キャリア教育ソフトウェア</p>
+              <p className="text-muted-foreground mb-4">LimitFreeプログラム、探究型キャリア教育ソフトウェア</p>
               <div className="flex space-x-4">
                 <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
