@@ -86,47 +86,13 @@ JSONのみを返してください。説明や前置きは不要です。
       })
     } catch (innerError) {
       console.error("Error in AI processing:", innerError)
-
-      // デモ用のサンプルデータを返す
-      const sampleDirections = {
-        directions: [
-          {
-            title: "アートセラピーワークショップの開催",
-            description:
-              "芸術的な手法を用いて、地域コミュニティの人々の心理的・感情的な健康をサポートするワークショップを企画・実施する。",
-            tags: ["アートセラピー", "ワークショップ", "コミュニティ支援"],
-          },
-          {
-            title: "学校でのアート表現プログラム",
-            description:
-              "地元の学校と連携し、生徒たちが自己表現やストレス解消のためのアート活動を行うプログラムを開発・実施する。",
-            tags: ["教育", "自己表現", "メンタルヘルス"],
-          },
-          {
-            title: "高齢者向けアートセラピーセッション",
-            description:
-              "高齢者施設と協力して、認知症予防や生活の質向上を目的としたアートセラピーセッションを定期的に開催する。",
-            tags: ["高齢者支援", "認知症予防", "QOL向上"],
-          },
-          {
-            title: "オンラインアートセラピーコミュニティの構築",
-            description:
-              "遠隔地からでも参加できるオンラインプラットフォームを活用し、アートを通じた心のケアと交流の場を提供する。",
-            tags: ["オンラインコミュニティ", "デジタルアート", "アクセシビリティ"],
-          },
-          {
-            title: "アートを通じた社会課題の可視化プロジェクト",
-            description:
-              "地域社会の課題をアートで表現し、展示やSNSを通じて問題提起と解決策の議論を促すプロジェクトを実施する。",
-            tags: ["社会課題", "アドボカシー", "コミュニティエンゲージメント"],
-          },
-        ],
-      }
-
-      return new Response(JSON.stringify(sampleDirections), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      })
+      return new Response(
+        JSON.stringify({
+          error: "Failed to generate quest directions",
+          details: innerError instanceof Error ? innerError.message : String(innerError),
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      )
     }
   } catch (error) {
     console.error("Error in quest direction suggestion API:", error)

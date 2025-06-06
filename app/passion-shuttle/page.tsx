@@ -34,7 +34,13 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, Rocket, RefreshCw, Check, Tag, AlertCircle, Sparkles, ChevronRight, Loader2 } from "lucide-react"
-import { getUserRiasecResults, getUserOceanResults, getLatestPassionShuttleSuggestions, getSupabaseClient, savePassionShuttle as savePassionShuttleToDb, } from "@/lib/supabase"
+import {
+  getUserRiasecResults,
+  getUserOceanResults,
+  getLatestPassionShuttleSuggestions,
+  getSupabaseClient,
+  savePassionShuttle as savePassionShuttleToDb,
+} from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
