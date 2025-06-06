@@ -34,7 +34,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, Rocket, RefreshCw, Check, Tag, AlertCircle, Sparkles, ChevronRight, Loader2 } from "lucide-react"
-import { getUserRiasecResults, getUserOceanResults, getLatestPassionShuttleSuggestions, getSupabaseClient } from "@/lib/supabase"
+import { getUserRiasecResults, getUserOceanResults, getLatestPassionShuttleSuggestions, getSupabaseClient, savePassionShuttle as savePassionShuttleToDb, } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
@@ -166,7 +166,7 @@ export default function PassionShuttlePage() {
 
   /* ─────────────────────────────────────────────────────────────── */
   /* save                                                           */
-  const savePassionShuttle = async () => {
+  const handleSavePassionShuttle = async () => {
     if (!user || selectedSuggestion === null) return
 
     try {
@@ -174,19 +174,7 @@ export default function PassionShuttlePage() {
       setError(null)
 
       const s = suggestions[selectedSuggestion]
-      const res = await fetch("/api/passion-shuttle/save", {
-        method: "POST",
-        headers: authHeaders(),                          // ★
-        body: JSON.stringify({
-          title: s.title,
-          description: s.description,
-          tags: s.tags,
-        }),
-      })
-
-      const txt = await res.text()
-      const data = JSON.parse(txt)
-      if (!res.ok) throw new Error(data.error || "保存に失敗しました。")
+      await savePassionShuttleToDb(user.id, s.title, s.description, s.tags)
 
       router.push("/dashboard")
     } catch (e) {
@@ -442,7 +430,7 @@ export default function PassionShuttlePage() {
                   </p>
                   <div className="flex justify-center">
                     <button
-                      onClick={savePassionShuttle}
+                      onClick={handleSavePassionShuttle}
                       disabled={saving || selectedSuggestion === null}
                       className="flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-xl text-white font-medium shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
