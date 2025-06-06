@@ -1,6 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic"
 import { generateText } from "ai"
 import { getSelectedQuestDirection } from "@/lib/supabase"
+import { parseJsonSafe } from "@/lib/utils"
 
 export const maxDuration = 30
 
@@ -35,18 +36,20 @@ export async function POST(req: Request) {
         })
       }
 
-      const tags = Array.isArray((questDirection as any).tags)
-        ? (questDirection as any).tags
-        : Array.isArray((questDirection as any).focus_areas)
-          ? (questDirection as any).focus_areas
+      const qd = questDirection as any
+      const tags = Array.isArray(qd.tags)
+        ? qd.tags
+        : Array.isArray(qd.focus_areas)
+          ? qd.focus_areas
           : []
 
       // プロンプトを生成
+      
       const prompt = `
 あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、様々な難易度の探究クエストを10個提案してください。
 
-クエスト方向性：「${questDirection.title}」
-説明：${questDirection.description}
+クエスト方向性：「${qd.title}」
+説明：${qd.description}
 タグ：${tags.join(", ")}
 
 各クエストには以下の要素を含めてください：
@@ -88,7 +91,7 @@ JSONのみを返してください。説明や前置きは不要です。
       // JSONをパース
       let quests
       try {
-        quests = JSON.parse(text)
+        quests = parseJsonSafe(text)
       } catch (parseError) {
         console.error("Error parsing AI response:", parseError, text)
         throw new Error("Invalid JSON response from AI")

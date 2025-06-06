@@ -1,6 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic"
 import { generateText } from "ai"
 import { getSelectedPassionShuttle } from "@/lib/supabase"
+import { parseJsonSafe } from "@/lib/utils"
 
 export const maxDuration = 30
 
@@ -80,7 +81,7 @@ JSONのみを返してください。説明や前置きは不要です。
       // JSONをパース
       let directions
       try {
-        directions = JSON.parse(text)
+        directions = parseJsonSafe(text)
       } catch (parseError) {
         console.error("Error parsing AI response:", parseError, text)
         throw new Error("Invalid JSON response from AI")

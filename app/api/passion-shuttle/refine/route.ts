@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { parseJsonSafe } from "@/lib/utils"
 
 export const maxDuration = 30 // Vercel edge timeout
 
@@ -93,7 +94,6 @@ export async function POST(req: NextRequest) {
 ▼ ユーザー情報
 - 名前          : ${profile?.display_name ?? "ゲスト"}
 - RIASECタイプ   : ${riasecCode}
-git 
 ▼ 現在の提案
 ${JSON.stringify(latest, null, 2)}
 
@@ -132,7 +132,7 @@ ${feedback}
 
     let refined
     try {
-      refined = JSON.parse(raw)
+      refined = parseJsonSafe(raw)
     } catch (parseErr) {
       console.error("[refine] JSON parse error:", parseErr, "raw:", raw)
       return NextResponse.json(

@@ -716,7 +716,7 @@ export async function saveQuestDirection(userId: string, direction: any) {
       user_id: userId,
       title: direction.title,
       description: direction.description,
-      focus_areas: direction.focus_areas,
+      focus_areas: direction.tags ?? direction.focus_areas,
       selected: true,
       created_at: new Date().toISOString(),
     })
@@ -737,7 +737,7 @@ export async function saveQuestDirection(userId: string, direction: any) {
 export async function getSelectedQuestDirection(userId: string) {
   if (DEMO_MODE) {
     // デモデータを返す
-    return {
+    const demo = {
       id: 1,
       user_id: "demo-user-id",
       title: "アートセラピーワークショップの企画と実施",
@@ -746,6 +746,7 @@ export async function getSelectedQuestDirection(userId: string) {
       selected: true,
       created_at: new Date().toISOString(),
     }
+    return { ...demo, tags: demo.focus_areas }
   }
 
   // 通常の処理
@@ -764,8 +765,8 @@ export async function getSelectedQuestDirection(userId: string) {
       console.error("Error fetching selected quest direction:", error)
       throw error
     }
-
-    return data?.[0] || null
+    const record = data?.[0] || null
+    return record ? { ...record, tags: record.focus_areas } : null
   } catch (error) {
     console.error("Error getting selected quest direction:", error)
     throw error instanceof Error ? error : new Error(String(error))

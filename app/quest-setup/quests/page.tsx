@@ -341,7 +341,7 @@ export default function QuestSetupPage() {
                     <div className="font-bold text-foreground flex items-center">「{questDirection.title}」</div>
                     <p className="text-gray-300 mt-2">{questDirection.description}</p>
                     <div className="flex gap-2 mt-3">
-                      {questDirection.tags.map((tag: string, index: number) => (
+                    {(questDirection.tags ?? questDirection.focus_areas ?? []).map((tag: string, index: number) => (
                         <span
                           key={index}
                           className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full border border-blue-500/30"

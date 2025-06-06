@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { parseJsonSafe } from "@/lib/utils"
 
 export const maxDuration = 30
 
@@ -129,9 +130,8 @@ export async function POST(req: NextRequest) {
     const aiJson = await aiRes.json()
     const raw    = aiJson.content?.[0]?.text ?? ""
     let suggestions
-
     try {
-      suggestions = JSON.parse(raw)
+      suggestions = parseJsonSafe(raw)
     } catch (parseErr) {
       console.error("[passion-shuttle] JSON parse error:", parseErr, "raw:", raw)
       return NextResponse.json(
