@@ -36,13 +36,14 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, Rocket, RefreshCw, Check, Tag, AlertCircle, ChevronRight, Loader2, MapPin } from "lucide-react"
-import { getSelectedPassionShuttle, saveQuestDirection } from "@/lib/supabase"
+import { getSelectedPassionShuttle, saveQuestDirection, getSupabaseClient } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
 export default function QuestDirectionPage() {
   const router = useRouter()
   const { user } = useAuthContext()
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [refining, setRefining] = useState(false)
@@ -53,6 +54,12 @@ export default function QuestDirectionPage() {
   const [selectedDirection, setSelectedDirection] = useState<number | null>(null)
   const [feedback, setFeedback] = useState("")
   const [showStars, setShowStars] = useState(false)
+
+  useEffect(() => {
+    getSupabaseClient().auth
+      .getSession()
+      .then(({ data }) => setToken(data.session?.access_token ?? null))
+  }, [])
 
   useEffect(() => {
     setShowStars(true)
@@ -86,6 +93,11 @@ export default function QuestDirectionPage() {
     }
   }
 
+  const authHeaders = (): HeadersInit => ({
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  })
+
   // クエスト方向性の生成
   const generateDirections = async () => {
     if (!user) return
@@ -96,9 +108,7 @@ export default function QuestDirectionPage() {
 
       const response = await fetch("/api/quest/suggest-directions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(),
         body: JSON.stringify({ userId: user.id }),
       })
 
@@ -133,9 +143,7 @@ export default function QuestDirectionPage() {
 
       const response = await fetch("/api/quest/refine-directions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
           userId: user.id,
           feedback,

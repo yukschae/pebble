@@ -15,6 +15,7 @@ export async function POST(req: Request) {
       })
     }
 
+    const token = req.headers.get("authorization")?.replace("Bearer ", "")
     // リクエストボディを取得
     const { userId } = await req.json()
 
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
 
     try {
       // クエスト方向性を取得
-      const questDirection = await getSelectedQuestDirection(userId)
+      const questDirection = await getSelectedQuestDirection(userId, token)
 
       if (!questDirection) {
         return new Response(JSON.stringify({ error: "No quest direction found" }), {

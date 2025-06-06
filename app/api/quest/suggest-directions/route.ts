@@ -16,6 +16,8 @@ export async function POST(req: Request) {
     }
 
     // リクエストボディを取得
+    
+    const token = req.headers.get("authorization")?.replace("Bearer ", "")
     const { userId } = await req.json()
 
     if (!userId) {
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
 
     try {
       // パッションシャトルを取得
-      const passionShuttle = await getSelectedPassionShuttle(userId)
+      const passionShuttle = await getSelectedPassionShuttle(userId, token)
 
       if (!passionShuttle) {
         return new Response(JSON.stringify({ error: "No passion shuttle found" }), {

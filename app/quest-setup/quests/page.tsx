@@ -34,13 +34,14 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, AlertCircle, ChevronRight, Loader2, MapPin, Flag, Check, Filter, Save, Star } from "lucide-react"
-import { getSelectedQuestDirection, saveQuests } from "@/lib/supabase"
+import { getSelectedQuestDirection, saveQuests, getSupabaseClient} from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
 export default function QuestSetupPage() {
   const router = useRouter()
   const { user } = useAuthContext()
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [filtering, setFiltering] = useState(false)
@@ -53,6 +54,12 @@ export default function QuestSetupPage() {
   const [maxDifficulty, setMaxDifficulty] = useState(5)
   const [step, setStep] = useState(1) // 1: 生成, 2: 難易度選択, 3: 確認
   const [showStars, setShowStars] = useState(false)
+
+  useEffect(() => {
+    getSupabaseClient().auth
+      .getSession()
+      .then(({ data }) => setToken(data.session?.access_token ?? null))
+  }, [])
 
   useEffect(() => {
     setShowStars(true)
@@ -86,6 +93,12 @@ export default function QuestSetupPage() {
     }
   }
 
+
+  const authHeaders = (): HeadersInit => ({
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  })
+
   // クエストの生成
   const generateQuests = async () => {
     if (!user) return
@@ -96,9 +109,7 @@ export default function QuestSetupPage() {
 
       const response = await fetch("/api/quest/generate-quests", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(),
         body: JSON.stringify({ userId: user.id }),
       })
 
@@ -128,9 +139,7 @@ export default function QuestSetupPage() {
 
       const response = await fetch("/api/quest/filter-quests", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
           quests,
           minDifficulty,

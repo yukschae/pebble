@@ -734,7 +734,10 @@ export async function saveQuestDirection(userId: string, direction: any) {
 }
 
 // 選択されたクエスト方向性を取得する関数
-export async function getSelectedQuestDirection(userId: string) {
+export async function getSelectedQuestDirection(
+  userId: string,
+  accessToken?: string,
+) {
   if (DEMO_MODE) {
     // デモデータを返す
     const demo = {
@@ -752,7 +755,9 @@ export async function getSelectedQuestDirection(userId: string) {
   // 通常の処理
   try {
     console.log("Getting selected quest direction for:", userId)
-    const supabase = getSupabaseClient()
+    const supabase = accessToken
+      ? getSupabaseClientWithAuth(accessToken)
+      : getSupabaseClient()
 
     const { data, error } = await supabase
       .from("quest_directions")
