@@ -1,6 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic"
 import { generateText } from "ai"
-import { getSelectedPassionShuttle } from "@/lib/supabase"
+import { getSelectedPassionShuttle } from "@/lib/server-superbase"
 import { parseJsonSafe } from "@/lib/utils"
 
 export const maxDuration = 30
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
       // プロンプトを生成
       const prompt = `
-あなたは探究学習のエキスパートです。以下のパッションシャトルに基づいて、具体的な探究プロジェクトの方向性を5つ提案してください。
+あなたは探究学習のエキスパートです。以下のパッションシャトルに基づいて、具体的な探究プロジェクトの方向性を5つ提案してください。言語は日本語です。
 
 パッションシャトル：「${passionShuttle.title}」
 説明：${passionShuttle.description}

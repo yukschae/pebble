@@ -695,10 +695,16 @@ export async function getSelectedPassionShuttle(
 }
 
 // クエスト方向性を保存する関数
-export async function saveQuestDirection(userId: string, direction: any) {
+export async function saveQuestDirection(
+  userId: string,
+  direction: any,
+  accessToken?: string,
+) {
   try {
     console.log("Saving quest direction for:", userId)
-    const supabase = getSupabaseClient()
+    const supabase = accessToken
+      ? getSupabaseClientWithAuth(accessToken)
+      : getSupabaseClient()
 
     // 既存の方向性を非選択状態にする
     const { error: updateError } = await supabase

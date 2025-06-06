@@ -1,6 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic"
 import { generateText } from "ai"
-import { getSelectedQuestDirection } from "@/lib/supabase"
+import { getSelectedQuestDirection } from "@/lib/server-superbase"
 import { parseJsonSafe } from "@/lib/utils"
 
 export const maxDuration = 30
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       // プロンプトを生成
       
       const prompt = `
-あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、様々な難易度の探究クエストを10個提案してください。
+あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、様々な難易度の探究クエストを10個提案してください。言語は日本語です。
 
 クエスト方向性：「${qd.title}」
 説明：${qd.description}
