@@ -55,12 +55,7 @@ export default function QuestSetupPage() {
   const [step, setStep] = useState(1) // 1: 生成, 2: 難易度選択, 3: 確認
   const [showStars, setShowStars] = useState(false)
 
-  useEffect(() => {
-    getSupabaseClient().auth
-      .getSession()
-      .then(({ data }) => setToken(data.session?.access_token ?? null))
-  }, [])
-
+  
   useEffect(() => {
     setShowStars(true)
     if (user) {
@@ -93,12 +88,6 @@ export default function QuestSetupPage() {
     }
   }
 
-
-  const authHeaders = (): HeadersInit => ({
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  })
-
   // クエストの生成
   const generateQuests = async () => {
     if (!user) return
@@ -109,7 +98,7 @@ export default function QuestSetupPage() {
 
       const response = await fetch("/api/quest/generate-quests", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user.id }),
       })
 
@@ -139,7 +128,7 @@ export default function QuestSetupPage() {
 
       const response = await fetch("/api/quest/filter-quests", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           quests,
           minDifficulty,
@@ -173,16 +162,7 @@ export default function QuestSetupPage() {
       setSaving(true)
       setError(null)
 
-      const res = await fetch("/api/quest/save-quests", {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ quests: filteredQuests }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || "クエストの保存に失敗しました。")
-      }
+      await saveQuests(user.id, filteredQuests)
 
       // ダッシュボードにリダイレクト
       router.push("/dashboard")

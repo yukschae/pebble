@@ -695,16 +695,10 @@ export async function getSelectedPassionShuttle(
 }
 
 // クエスト方向性を保存する関数
-export async function saveQuestDirection(
-  userId: string,
-  direction: any,
-  accessToken?: string,
-) {
+export async function saveQuestDirection(userId: string, direction: any) {
   try {
     console.log("Saving quest direction for:", userId)
-    const supabase = accessToken
-      ? getSupabaseClientWithAuth(accessToken)
-      : getSupabaseClient()
+    const supabase = getSupabaseClient()
 
     // 既存の方向性を非選択状態にする
     const { error: updateError } = await supabase
@@ -717,20 +711,12 @@ export async function saveQuestDirection(
       throw updateError
     }
 
-    const focusAreas = Array.isArray(direction.tags)
-      ? direction.tags
-      : Array.isArray(direction.focus_areas)
-        ? direction.focus_areas
-        : typeof direction.tags === "string"
-          ? direction.tags.split(/[,\s]+/).filter(Boolean)
-          : []
-
     // 新しい方向性を保存
     const { error } = await supabase.from("quest_directions").insert({
       user_id: userId,
       title: direction.title,
       description: direction.description,
-      focus_areas: focusAreas,
+      focus_areas: direction.focus_areas,
       selected: true,
       created_at: new Date().toISOString(),
     })
@@ -748,13 +734,10 @@ export async function saveQuestDirection(
 }
 
 // 選択されたクエスト方向性を取得する関数
-export async function getSelectedQuestDirection(
-  userId: string,
-  accessToken?: string,
-) {
+export async function getSelectedQuestDirection(userId: string) {
   if (DEMO_MODE) {
     // デモデータを返す
-    const demo = {
+    return {
       id: 1,
       user_id: "demo-user-id",
       title: "アートセラピーワークショップの企画と実施",
@@ -763,15 +746,12 @@ export async function getSelectedQuestDirection(
       selected: true,
       created_at: new Date().toISOString(),
     }
-    return { ...demo, tags: demo.focus_areas }
   }
 
   // 通常の処理
   try {
     console.log("Getting selected quest direction for:", userId)
-    const supabase = accessToken
-      ? getSupabaseClientWithAuth(accessToken)
-      : getSupabaseClient()
+    const supabase = getSupabaseClient()
 
     const { data, error } = await supabase
       .from("quest_directions")
@@ -784,8 +764,8 @@ export async function getSelectedQuestDirection(
       console.error("Error fetching selected quest direction:", error)
       throw error
     }
-    const record = data?.[0] || null
-    return record ? { ...record, tags: record.focus_areas } : null
+
+    return data?.[0] || null
   } catch (error) {
     console.error("Error getting selected quest direction:", error)
     throw error instanceof Error ? error : new Error(String(error))
