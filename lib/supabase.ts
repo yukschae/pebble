@@ -105,7 +105,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<any>
   signOut: () => Promise<boolean>
   userProfile: any | null
-  updateUserProfile: (displayName: string) => Promise<any>
+  updateUserProfile: (displayName: string, avatar?: string) => Promise<any>
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -286,7 +286,7 @@ export function useAuth() {
     }
   }
 
-  const updateUserProfile = async (displayName: string) => {
+  const updateUserProfile = async (displayName: string, avatar?: string) => {
     try {
       if (!user) {
         console.error("Cannot update profile: User not authenticated")
@@ -294,8 +294,12 @@ export function useAuth() {
       }
 
       console.log("Updating user profile for:", user.id)
-      const result = await saveUserProfile(user.id, displayName)
-      setUserProfile({ ...userProfile, display_name: displayName })
+      const result = await saveUserProfile(user.id, displayName, avatar)
+      setUserProfile({
+        ...userProfile,
+        display_name: displayName,
+        ...(avatar ? { avatar } : {}),
+      })
       console.log("Profile update successful")
       return result
     } catch (error) {
@@ -352,7 +356,11 @@ export async function getUserProfile(userId: string) {
 }
 
 // ユーザープロファイルを保存する関数
-export async function saveUserProfile(userId: string, displayName: string) {
+export async function saveUserProfile(
+  userId: string,
+  displayName?: string,
+  avatar?: string,
+) {
   try {
     if (!userId) {
       throw new Error("User ID is required")
@@ -361,14 +369,16 @@ export async function saveUserProfile(userId: string, displayName: string) {
     console.log("Saving user profile for:", userId)
     const supabase = getSupabaseClient()
 
-    const { data, error } = await supabase.from("user_profiles").upsert(
-      {
-        user_id: userId,
-        display_name: displayName,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" },
-    )
+    const payload: Record<string, any> = {
+      user_id: userId,
+      updated_at: new Date().toISOString(),
+    }
+    if (displayName !== undefined) payload.display_name = displayName
+    if (avatar !== undefined) payload.avatar = avatar
+
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .upsert(payload, { onConflict: "user_id" })
 
     if (error) {
       console.error("Error saving user profile:", error)

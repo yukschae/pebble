@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Rocket, ChevronRight, Sparkles } from "lucide-react"
 import { SignInForm } from "@/components/auth/sign-in-form"
-import { SignUpForm } from "@/components/auth/sign-up-form"
 import { useAuthContext } from "@/lib/supabase"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 
 export default function LandingPage() {
@@ -154,18 +152,7 @@ export default function LandingPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-700 shadow-xl p-8">
-              <Tabs defaultValue="sign-in" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="sign-in">ログイン</TabsTrigger>
-                  <TabsTrigger value="sign-up">アカウント作成</TabsTrigger>
-                </TabsList>
-                <TabsContent value="sign-in">
-                  <SignInForm />
-                </TabsContent>
-                <TabsContent value="sign-up">
-                  <SignUpForm />
-                </TabsContent>
-              </Tabs>
+            <SignInForm />
             </div>
           </motion.div>
         </div>

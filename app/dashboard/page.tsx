@@ -52,6 +52,8 @@ import { getUserRiasecResults, getUserOceanResults, getSelectedPassionShuttle, g
 import { Button } from "@/components/ui/button"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
+import DashboardTutorial from "@/components/dashboard-tutorial"
+import ProfileSetupDialog from "@/components/profile-setup"
 
 // Suggested types (you might need to adjust based on actual data structure)
 interface RiasecResultDetails {
@@ -119,13 +121,24 @@ export default function Dashboard() {
   const [riasecResults, setRiasecResults] = useState<any>(null)
   const [oceanResults, setOceanResults] = useState<any>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [tutorialDone, setTutorialDone] = useState(false)
+  const [showProfileSetup, setShowProfileSetup] = useState(false)
 
   useEffect(() => {
     console.log("Dashboard user effect triggered:", { userId: user?.id })
     if (user && !loading) { 
       loadUserData()
     }
-  }, [user, loading]) 
+  }, [user, loading])
+
+  useEffect(() => {
+    if (
+      tutorialDone &&
+      (!userProfile || !userProfile.display_name || !userProfile.avatar)
+    ) {
+      setShowProfileSetup(true)
+    }
+  }, [tutorialDone, userProfile])
 
   // ユーザーデータの読み込み
   const loadUserData = async () => {
@@ -360,15 +373,26 @@ export default function Dashboard() {
           {/* User profile */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <div className="bg-white/5 rounded-xl p-3 flex items-center border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3">
-                <span className="text-white font-bold">
-                  {userProfile?.display_name ? userProfile.display_name.charAt(0).toUpperCase() : "U"}
-                </span>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3 overflow-hidden">
+                {userProfile?.avatar ? (
+                  <img src={userProfile.avatar} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-bold">
+                    {userProfile?.display_name ? userProfile.display_name.charAt(0).toUpperCase() : "U"}
+                  </span>
+                )}
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium">{userProfile?.display_name || user?.email}</div>
                 <div className="text-xs text-gray-400">レベル 1</div>
               </div>
+              <button
+                onClick={() => setShowProfileSetup(true)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2"
+                title="プロフィール編集"
+              >
+                <Settings className="w-4 h-4 text-gray-400" />
+              </button>
               <button
                 onClick={handleSignOut}
                 className="p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -547,8 +571,8 @@ export default function Dashboard() {
                 </div>
               </motion.div>
 
-              {/* Avatar */}
-              <motion.div
+             {/* Avatar */}
+             <motion.div
                 className="card-gradient rounded-2xl shadow-xl border border-primary/10 p-6 flex flex-col items-center justify-center relative overflow-hidden"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -568,51 +592,18 @@ export default function Dashboard() {
                 </motion.div>
 
                 <motion.div
-                  className="relative w-48 h-48"
+                  className="relative w-48 h-48 rounded-full overflow-hidden border border-white/20 shadow-xl"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.6 }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full shadow-xl shadow-teal-500/30 flex items-center justify-center overflow-hidden border border-white/20">
-                    <div className="absolute top-0 left-0 w-full h-1/2 bg-teal-300/30" />
-                    <div className="absolute top-1/3 left-1/4 w-1/5 h-1/5 bg-white rounded-full" />
-                    <div className="absolute top-1/3 left-1/4 w-1/10 h-1/10 bg-gray-900 rounded-full ml-1 mt-1" />
-                    <div className="absolute top-1/3 right-1/4 w-1/5 h-1/5 bg-white rounded-full" />
-                    <div className="absolute top-1/3 right-1/4 w-1/10 h-1/10 bg-gray-900 rounded-full mr-1 mt-1" />
-                    <div className="absolute bottom-1/4 left-1/3 w-1/3 h-1/12 bg-white rounded-full" />
-
-                    <motion.div
-                      className="absolute -top-2 -right-2 w-12 h-12"
-                      animate={{
-                        rotate: [0, 10, 0, -10, 0],
-                        y: [0, -5, 0, -5, 0],
-                      }}
-                      transition={{
-                        duration: 5,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <div className="w-full h-full bg-amber-400 rounded-full shadow-lg shadow-amber-500/30 border border-white/20" />
-                    </motion.div>
-
-                    <motion.div
-                      className="absolute -top-2 -left-2 w-12 h-12"
-                      animate={{
-                        rotate: [0, -10, 0, 10, 0],
-                        y: [0, -5, 0, -5, 0],
-                      }}
-                      transition={{
-                        duration: 5,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                        delay: 0.5,
-                      }}
-                    >
-                      <div className="w-full h-full bg-amber-400 rounded-full shadow-lg shadow-amber-500/30 border border-white/20" />
-                    </motion.div>
-                  </div>
+                  <img
+                    src={userProfile?.avatar || "/placeholder-user.jpg"}
+                    alt="avatar"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
                 </motion.div>
+
 
                 <motion.div
                   className="mt-6 text-center"
@@ -987,6 +978,11 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <DashboardTutorial
+        onComplete={() => setTutorialDone(true)}
+        force={!userProfile || !userProfile.display_name || !userProfile.avatar}
+      />
+      <ProfileSetupDialog open={showProfileSetup} onClose={() => setShowProfileSetup(false)} />
     </AuthCheck>
   )
 }
