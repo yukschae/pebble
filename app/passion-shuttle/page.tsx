@@ -107,9 +107,16 @@ export default function PassionShuttlePage() {
     }
   }
 
-  const authHeaders = (): HeadersInit => ({
+  const fetchAuthToken = async () => {
+    const { data } = await getSupabaseClient().auth.getSession()
+    const t = data.session?.access_token ?? null
+    setToken(t)
+    return t
+  }
+
+  const authHeaders = (t: string | null): HeadersInit => ({
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(t ? { Authorization: `Bearer ${t}` } : {}),
   })                               // ★
       
   // パッションシャトル提案の生成
@@ -119,9 +126,10 @@ export default function PassionShuttlePage() {
       setGenerating(true)
       setError(null)
 
+      const access = await fetchAuthToken()
       const res = await fetch("/api/passion-shuttle/suggest", {
         method: "POST",
-        headers: authHeaders(),                          // ★
+        headers: authHeaders(access),                          // ★
         body: JSON.stringify({}),
       })
 
@@ -149,9 +157,10 @@ export default function PassionShuttlePage() {
       setRefining(true)
       setError(null)
 
+      const access = await fetchAuthToken()
       const res  = await fetch("/api/passion-shuttle/refine", {
         method: "POST",
-        headers: authHeaders(),                          // ★
+        headers: authHeaders(access),                          // ★
         body: JSON.stringify({ feedback }),
       })
 

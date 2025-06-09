@@ -173,7 +173,16 @@ export default function QuestSetupPage() {
       setSaving(true)
       setError(null)
 
-      await saveQuests(user.id, filteredQuests)
+      const res = await fetch("/api/quest/save-quests", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ quests: filteredQuests }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "クエストの保存に失敗しました。")
+      }
 
       // ダッシュボードにリダイレクト
       router.push("/dashboard")

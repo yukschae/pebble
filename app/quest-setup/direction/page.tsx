@@ -36,7 +36,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, Rocket, RefreshCw, Check, Tag, AlertCircle, ChevronRight, Loader2, MapPin } from "lucide-react"
-import { getSelectedPassionShuttle, saveQuestDirection, getSupabaseClient } from "@/lib/supabase"
+import { getSelectedPassionShuttle, getSupabaseClient, saveQuestDirection } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
@@ -60,6 +60,13 @@ export default function QuestDirectionPage() {
       .getSession()
       .then(({ data }) => setToken(data.session?.access_token ?? null))
   }, [])
+
+  const fetchAuthToken = async () => {
+    const { data } = await getSupabaseClient().auth.getSession()
+    const t = data.session?.access_token ?? null
+    setToken(t)
+    return t
+  }
 
   useEffect(() => {
     setShowStars(true)
@@ -93,10 +100,11 @@ export default function QuestDirectionPage() {
     }
   }
 
-  const authHeaders = (): HeadersInit => ({
+  const authHeaders = (t: string | null): HeadersInit => ({
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(t ? { Authorization: `Bearer ${t}` } : {}),
   })
+
 
   // クエスト方向性の生成
   const generateDirections = async () => {
@@ -106,9 +114,10 @@ export default function QuestDirectionPage() {
       setGenerating(true)
       setError(null)
 
+      const access = await fetchAuthToken()
       const response = await fetch("/api/quest/suggest-directions", {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders(access),
         body: JSON.stringify({ userId: user.id }),
       })
 
@@ -141,9 +150,10 @@ export default function QuestDirectionPage() {
       setRefining(true)
       setError(null)
 
+      const access = await fetchAuthToken()
       const response = await fetch("/api/quest/refine-directions", {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders(access),
         body: JSON.stringify({
           userId: user.id,
           feedback,
@@ -181,9 +191,10 @@ export default function QuestDirectionPage() {
       setSaving(true)
       setError(null)
 
+      const access = await fetchAuthToken()
       const direction = directions[selectedDirection]
 
-      await saveQuestDirection(user.id, direction)
+      await saveQuestDirection(user.id, direction, access ?? undefined)
 
       // クエスト設定ページにリダイレクト
       router.push("/quest-setup/quests")

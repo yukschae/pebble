@@ -717,12 +717,20 @@ export async function saveQuestDirection(
       throw updateError
     }
 
+    const focusAreas = Array.isArray(direction.tags)
+      ? direction.tags
+      : Array.isArray(direction.focus_areas)
+        ? direction.focus_areas
+        : typeof direction.tags === "string"
+          ? direction.tags.split(/[,\s]+/).filter(Boolean)
+          : []
+
     // 新しい方向性を保存
     const { error } = await supabase.from("quest_directions").insert({
       user_id: userId,
       title: direction.title,
       description: direction.description,
-      focus_areas: direction.tags ?? direction.focus_areas,
+      focus_areas: focusAreas,
       selected: true,
       created_at: new Date().toISOString(),
     })
