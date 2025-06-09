@@ -34,7 +34,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, AlertCircle, ChevronRight, Loader2, MapPin, Flag, Check, Filter, Save, Star } from "lucide-react"
-import { getSelectedQuestDirection, saveQuests, getSupabaseClient} from "@/lib/supabase"
+import { getSelectedQuestDirection, saveQuests, getSupabaseClient } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 
@@ -55,7 +55,24 @@ export default function QuestSetupPage() {
   const [step, setStep] = useState(1) // 1: 生成, 2: 難易度選択, 3: 確認
   const [showStars, setShowStars] = useState(false)
 
-  
+  useEffect(() => {
+    getSupabaseClient().auth
+      .getSession()
+      .then(({ data }) => setToken(data.session?.access_token ?? null))
+  }, [])
+
+  const fetchAuthToken = async () => {
+    const { data } = await getSupabaseClient().auth.getSession()
+    const t = data.session?.access_token ?? null
+    setToken(t)
+    return t
+  }
+
+  const authHeaders = (t: string | null): HeadersInit => ({
+    "Content-Type": "application/json",
+    ...(t ? { Authorization: `Bearer ${t}` } : {}),
+  })
+
   useEffect(() => {
     setShowStars(true)
     if (user) {
@@ -96,9 +113,10 @@ export default function QuestSetupPage() {
       setGenerating(true)
       setError(null)
 
+      const access = await fetchAuthToken()
       const response = await fetch("/api/quest/generate-quests", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(access),
         body: JSON.stringify({ userId: user.id }),
       })
 

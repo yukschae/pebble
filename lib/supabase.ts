@@ -37,7 +37,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { createContext, useEffect, useState, useContext } from "react"
 import { useRouter } from "next/navigation"
-import type { PassionSuggestion, PassionSuggestionRow } from "@/lib/types";
+import type { PassionSuggestion, PassionSuggestionRow, QuestData } from "@/lib/types";
 
 export const getSupabaseClientWithAuth = (accessToken?: string) =>
   createClient(
@@ -54,7 +54,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // デモモードの設定
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+const DEMO_MODE = false
 
 // クライアント側のシングルトンパターンを実装
 let supabaseInstance: ReturnType<typeof createClient> | null = null
@@ -809,7 +809,7 @@ export async function saveQuests(userId: string, quests: any[]) {
 }
 
 // ユーザーのクエストを取得する関数
-export async function getUserQuests(userId: string) {
+export async function getUserQuests(userId: string): Promise<QuestData[]> {
   if (DEMO_MODE) {
     // デモデータを返す
     return [
@@ -908,7 +908,7 @@ export async function getUserQuests(userId: string) {
       throw error
     }
 
-    return data || []
+    return (data as unknown as QuestData[]) || []
   } catch (error) {
     console.error("Error getting user quests:", error)
     throw error instanceof Error ? error : new Error(String(error))

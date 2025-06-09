@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 // サーバーサイド専用のSupabaseクライアント
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+const DEMO_MODE = false
 
 export function createServerSupabaseClient(accessToken?: string) {
   return createClient(

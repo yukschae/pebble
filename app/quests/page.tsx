@@ -50,123 +50,111 @@ import {
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
-// クエストデータ
-const questsData = [
-  {
-    id: 1,
-    title: "アートセラピーの基礎理解",
-    completed: true,
-    current: false,
-    description: "アートセラピーとは何かを理解し、活動の土台を作る。",
-    actions: [
-      "書籍やオンライン資料を通じて「アートセラピー」の歴史や理論を調べる。",
-      "メンタルケアや自己表現において、アートがどのような役割を果たすかを学ぶ。",
-      "専門家や学校のカウンセラーにインタビューを申し込み、基礎知識や注意点を聞いてみる。",
-    ],
-    outcome: "アートセラピーに関するミニレポートやまとめスライド。",
-    funRating: 45,
-    icon: BookOpen,
-    color: "from-gray-600 to-gray-800",
-  },
-  {
-    id: 2,
-    title: "対象とゴールの設定",
-    completed: false,
-    current: true,
-    description: "どのような人をサポートしたいのか、そのためにどんな形のアートを活用したいのかを具体化する。",
-    actions: [
-      "「友人やクラスメイト向け」「地域の高齢者向け」「幼稚園児向け」など、支援したい層をイメージし、ニーズを考える。",
-      "学校・地域・施設の協力を得られるか下調べし、アプローチ可能な場所を確認する。",
-      "活用したいアートのジャンルを検討（絵画、粘土、音楽、演劇など）し、その理由や必要な準備をリストアップする。",
-    ],
-    outcome: "対象（ターゲット）とゴールを明文化した企画書の草案。",
-    funRating: 70,
-    confidenceRating: 80,
-    icon: Target,
-    color: "from-orange-500 to-amber-600",
-  },
-  {
-    id: 3,
-    title: "具体的アクティビティの設計",
-    completed: false,
-    current: false,
-    description: "実際に行う活動内容をプログラム化する。",
-    actions: [
-      "1回あたりのセッション内容（所要時間、使用する道具、手順、テーマ）を組み立てる。",
-      "安全面やプライバシー、個人情報保護など、注意すべき項目を洗い出す。",
-      "参加者がストレスなく取り組めるように、難易度や手順をできるだけシンプルに調整する。",
-      "必要な物品をリストアップし、予算や購入先を検討する。",
-    ],
-    outcome: "アクティビティの進行プラン（タイムテーブル、役割分担、使用道具リストなど）。",
-    funRating: 60,
-    icon: Lightbulb,
-    color: "from-blue-500 to-indigo-600",
-  },
-  {
-    id: 4,
-    title: "実践（ワークショップまたは交流イベントの実施）",
-    completed: false,
-    current: false,
-    description: "実際にアートを用いたセラピー活動を開催してみる。",
-    actions: [
-      "学校や地域施設、オンラインなど、可能な形式で開催日を設定し、告知・募集を行う。",
-      "当日、アクティビティを進行し、参加者の様子を見ながら臨機応変に調整する。",
-      "アンケート用紙や簡易チェックリストを準備し、活動後の感想・満足度や気づきを収集する。",
-    ],
-    outcome: "ワークショップやイベントの実施写真・動画、参加者アンケートやフィードバックの記録",
-    funRating: 92,
-    icon: Users,
-    color: "from-red-500 to-orange-600",
-  },
-  {
-    id: 5,
-    title: "振り返りと発信",
-    completed: false,
-    current: false,
-    description: "プロジェクト全体を振り返り、学びや成果をまとめる。さらに今後の発展につなげる。",
-    actions: [
-      "アンケート結果や参加者の声を分析し、「アートセラピー」にどのような効果・インパクトがあったか検証する。",
-      "自分自身が感じた成長や課題を整理し、次のステップ（さらなる企画や進学・将来プランとのつながり）を考える。",
-      "SNSや校内新聞などで活動報告を行い、周りに共有する。必要があれば参加者や協力者へお礼のメッセージを送る。",
-    ],
-    outcome: "活動レポート、事後分析資料、今後のプラン提案書",
-    funRating: 65,
-    icon: Sparkles,
-    color: "from-purple-500 to-pink-600",
-  },
-]
+import {
+  getSelectedPassionShuttle,
+  getSelectedQuestDirection,
+  getUserQuests,
+  useAuthContext,
+} from "@/lib/supabase"
+
+interface QuestData {
+  id: number
+  title: string
+  completed: boolean
+  current: boolean
+  description: string
+  actions: string[]
+  outcome: string
+  difficulty: number
+  order: number
+  planet?: string
+  funRating?: number
+  confidenceRating?: number
+  icon?: React.ComponentType<any>
+  color?: string
+}
+
+const ICONS = [BookOpen, Target, Lightbulb, Users, Sparkles]
+const COLOR_MAP: Record<string, string> = {
+  gray: "from-gray-600 to-gray-800",
+  blue: "from-blue-500 to-indigo-600",
+  green: "from-green-500 to-emerald-600",
+  orange: "from-orange-500 to-amber-600",
+  "orange-red": "from-red-500 to-orange-600",
+  purple: "from-purple-500 to-pink-600",
+  red: "from-red-600 to-orange-600",
+  yellow: "from-yellow-500 to-amber-500",
+  "blue-green": "from-teal-500 to-cyan-600",
+  pink: "from-pink-500 to-fuchsia-600",
+}
+
 
 export default function QuestsPage() {
   const router = useRouter()
-  const [username] = useState("ユーダイ")
+  const { user, userProfile } = useAuthContext()
+  const [passionShuttle, setPassionShuttle] = useState<any>(null)
+  const [questDirection, setQuestDirection] = useState<any>(null)
+  const [quests, setQuests] = useState<any[]>([])
   const [showStars, setShowStars] = useState(false)
   const [selectedQuest, setSelectedQuest] = useState<number | null>(null)
   const [funRating, setFunRating] = useState<Record<number, number>>({})
   const [confidenceRating, setConfidenceRating] = useState<Record<number, number>>({})
 
-  // 初期値を設定
+
   useEffect(() => {
-    const initialFunRating: Record<number, number> = {}
-    const initialConfidenceRating: Record<number, number> = {}
+    if (!user) return
 
-    questsData.forEach((quest) => {
-      initialFunRating[quest.id] = quest.funRating || 0
-      if (quest.confidenceRating) {
-        initialConfidenceRating[quest.id] = quest.confidenceRating
+    const loadData = async () => {
+      try {
+        const [shuttle, direction, userQuests] = await Promise.all([
+          getSelectedPassionShuttle(user.id),
+          getSelectedQuestDirection(user.id),
+          getUserQuests(user.id),
+        ])
+
+        const questsArray = userQuests || []
+
+        setPassionShuttle(shuttle)
+        setQuestDirection(direction)
+
+        const questsWithExtras = questsArray.map((q, idx) => {
+          const planetKey = q.planet ?? ""
+          return {
+            ...q,
+            icon: ICONS[idx % ICONS.length],
+            color: COLOR_MAP[planetKey] || "from-gray-600 to-gray-800",
+          }
+        })
+
+        const initialFunRating: Record<number, number> = {}
+        const initialConfidenceRating: Record<number, number> = {}
+
+        questsWithExtras.forEach((quest: QuestData) => {
+          initialFunRating[quest.id] = quest.funRating || 0
+          if (quest.confidenceRating) {
+            initialConfidenceRating[quest.id] = quest.confidenceRating
+          }
+        })
+
+        setQuests(questsWithExtras)
+        setFunRating(initialFunRating)
+        setConfidenceRating(initialConfidenceRating)
+
+        const currentQuest = questsWithExtras.find((q: QuestData) => q.current)
+        if (currentQuest) setSelectedQuest(currentQuest.id)
+      } catch (err) {
+        console.error("Error loading quests:", err)
+      } finally {
+        setShowStars(true)
       }
-    })
-
-    setFunRating(initialFunRating)
-    setConfidenceRating(initialConfidenceRating)
-
-    // 現在のクエストを自動選択
-    const currentQuest = questsData.find((q) => q.current)
-    if (currentQuest) {
-      setSelectedQuest(currentQuest.id)
+      
     }
+    loadData()
+  }, [user])
 
-    setShowStars(true)
-  }, [])
+  const username = userProfile?.display_name || user?.email || "ユーザー"
+  const userInitial = username.charAt(0).toUpperCase()
+
 
   const handleFunRatingChange = (questId: number, value: number) => {
     setFunRating((prev) => ({
@@ -188,7 +176,7 @@ export default function QuestsPage() {
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <AnimatePresence>
           {showStars &&
-            Array.from({ length: 100 }).map((_, i) => (
+             Array.from({ length: 100 }).map((_, i: number) => (
               <motion.div
                 key={i}
                 className="absolute w-1 h-1 bg-white rounded-full"
@@ -282,7 +270,7 @@ export default function QuestsPage() {
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="bg-white/5 rounded-xl p-3 flex items-center border border-white/10">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3">
-              <span className="text-white font-bold">ユ</span>
+            <span className="text-white font-bold">{userInitial}</span>
             </div>
             <div className="flex-1">
               <div className="text-sm font-medium">{username}</div>
@@ -313,7 +301,7 @@ export default function QuestsPage() {
             </motion.button>
 
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-2xl font-bold py-5 px-8 rounded-2xl shadow-lg shadow-blue-600/20 text-center border border-white/10 backdrop-blur-sm flex-1">
-              <span className="mr-2">🚀</span> パッションシャトル：「アート×人助け」 <span className="ml-2">🎨</span>
+            <span className="mr-2">🚀</span> パッションシャトル：「{passionShuttle?.title}」 <span className="ml-2">🎨</span>
             </div>
 
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-4">
@@ -347,31 +335,24 @@ export default function QuestsPage() {
               探究テーマ
             </h3>
             <p className="text-gray-300 mb-6">
-              アート（絵画、工作、音楽、演劇など）を使った表現活動を通じて、人々（友人・地域・福祉施設等）をサポートする「アートセラピー」を探究したい！具体的には、小規模なワークショップや作品展示、交流イベントなどを企画・実施し、参加者の心の健康や自己表現を促す。
+            {questDirection?.description}
             </p>
 
             <div className="flex flex-wrap gap-3">
-              <span className="text-sm bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">
-                #アートセラピー
-              </span>
-              <span className="text-sm bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full border border-purple-500/30">
-                #イベント企画
-              </span>
-              <span className="text-sm bg-pink-500/20 text-pink-300 px-3 py-1 rounded-full border border-pink-500/30">
-                #メンタルケア
-              </span>
-              <span className="text-sm bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30">
-                #地域貢献
-              </span>
-              <span className="text-sm bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
-                #自己表現
-              </span>
+            {questDirection?.focus_areas?.map((tag: string, i: number) => (
+                <span
+                  key={i}
+                  className="text-sm bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30"
+                >
+                  #{tag}
+                </span>
+              ))}
             </div>
           </motion.div>
 
           {/* Quest List */}
           <div className="grid grid-cols-1 gap-6 mb-10">
-            {questsData.map((quest, index) => (
+          {quests.map((quest, index) => (
               <motion.div
                 key={quest.id}
                 className={`bg-gray-900/40 backdrop-blur-xl rounded-2xl shadow-xl border ${
@@ -393,7 +374,10 @@ export default function QuestsPage() {
                       {quest.completed ? (
                         <CheckCircle className="w-7 h-7 text-white" />
                       ) : (
-                        <quest.icon className="w-7 h-7 text-white" />
+                        (() => {
+                          const Icon = quest.icon
+                          return Icon ? <Icon className="w-7 h-7 text-white" /> : null
+                        })()
                       )}
                     </div>
 
@@ -512,7 +496,7 @@ export default function QuestsPage() {
                         <div className="mt-6 pt-6 border-t border-white/10">
                           <h4 className="font-bold text-white mb-3">行動例:</h4>
                           <ul className="space-y-2 text-gray-300 list-disc pl-5">
-                            {quest.actions.map((action, i) => (
+                          {quest.actions.map((action: string, i: number) => (
                               <li key={i}>{action}</li>
                             ))}
                           </ul>
