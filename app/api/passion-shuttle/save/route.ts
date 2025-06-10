@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         )
       : createRouteHandlerClient({ cookies })
 
-  /* 3. user id */
+  /* 3. user id n */
   let userId: string | null = null
   if (token) {
     const { data } = await supabase.auth.getUser()
