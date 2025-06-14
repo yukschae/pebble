@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { parseJsonSafe } from "@/lib/utils"
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 function anthropicHeaders(key: string) {
   return {
