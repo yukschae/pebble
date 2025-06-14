@@ -137,10 +137,16 @@ export default function PassionShuttlePage() {
         body: JSON.stringify({ socialIssue }),
       })
 
-      const txt = await res.text()
-      const data = JSON.parse(txt)
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text.slice(0, 200))
+      }
 
-      if (!res.ok) throw new Error(data.error || "提案の生成に失敗しました。")
+      const data = (await res.json()) as { suggestions?: PassionSuggestion[] }
+      if (!data.suggestions || !Array.isArray(data.suggestions)) {
+        throw new Error("Invalid response from server")
+      }
+
       setSuggestions(data.suggestions)
       sessionStorage.removeItem("socialIssue")
       setSelectedSuggestion(null)
@@ -170,10 +176,16 @@ export default function PassionShuttlePage() {
         body: JSON.stringify({ feedback }),
       })
 
-      const txt  = await res.text()
-      const data = JSON.parse(txt)
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text.slice(0, 200))
+      }
 
-      if (!res.ok) throw new Error(data.error || "提案の修正に失敗しました。")
+      const data = (await res.json()) as { suggestions?: PassionSuggestion[] }
+      if (!data.suggestions || !Array.isArray(data.suggestions)) {
+        throw new Error("Invalid response from server")
+      }
+      
       setSuggestions(data.suggestions)
       setSelectedSuggestion(null)
       setShowInfo(null)
