@@ -42,6 +42,7 @@ import {
   savePassionShuttle as savePassionShuttleToDb,
 } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
+import { Button } from "@/components/ui/button"
 import { useAuthContext } from "@/lib/supabase"
 
 import type { PassionSuggestion } from "@/lib/types";
@@ -314,10 +315,16 @@ export default function PassionShuttlePage() {
                   パッションシャトルとは？
                 </h2>
                 <p className="text-gray-300 mb-4">
-                  パッションシャトルは、あなたの興味・関心と才能を掛け合わせた、創造的なキャリアコンセプトです。従来の「医者」「弁護士」のような具体的な職業ではなく、より抽象的で創造的な組み合わせを提案します。
+                パッションシャトルは、あなたの 興味・価値観・性格 をもとにつくる、“ちょっとワクワクする未来の肩書き” です。<br /><br />
+                たとえば… <br />
+                「古着で誰でも自己表現！ジェンダーフリーリメイクを広める人」<br />
+                「里山と都会をぐるっと循環でつなげる人」<br /><br />
+                これらは、ただの職業名ではありません。あなたが「どんなことにワクワクして」、「どんな社会とつながって」、「どんな自分らしさを活かせるか」から生まれた、あなただけのキャリアコンセプトです。
+
                 </p>
                 <p className="text-gray-300">
-                  あなたのRIASECタイプとOCEANタイプの分析結果に基づいて、AIがあなたに合ったパッションシャトル候補を提案します。気に入った提案を選んで、あなただけのキャリア探究の旅を始めましょう！
+                LimitFreeでは、RIASEC診断・OCEAN診断・社会課題の関心から、あなたのパッションシャトル候補をAIが提案します。< br />
+                気になるものを選んで、あなたの“探究の旅”を始めよう！
                 </p>
               </motion.div>
 
@@ -385,20 +392,31 @@ export default function PassionShuttlePage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-gray-300 mb-2">
-                          {showInfo === index
-                            ? suggestion.informative_description
-                            : suggestion.colloquial_description}
-                        </p>
-                        <button
-                          className="text-xs text-blue-300 underline mb-2"
+                        
+                        <div className="flex items-start mb-2">
+                          <img
+                            src="/images/guidebot.png"
+                            alt="キャラクター"
+                            className="w-10 h-10 rounded-full mr-3 border border-white/20 object-cover"
+                          />
+                          <div className="relative bg-gray-700/60 p-3 rounded-lg text-gray-300 flex-1">
+                            <div className="absolute -left-1.5 top-3 w-3 h-3 bg-gray-700/60 rotate-45"></div>
+                            {showInfo === index
+                              ? suggestion.informative_description
+                              : suggestion.colloquial_description}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="mt-2 text-xs"
                           onClick={(e) => {
                             e.stopPropagation()
                             setShowInfo(showInfo === index ? null : index)
                           }}
                         >
                           {showInfo === index ? "フレンドリーに読む" : "ちゃんとした説明はここ！"}
-                        </button>
+                        </Button>
                         <div className="flex flex-wrap gap-2">
                           {suggestion.tags.map((tag: string, tagIndex: number) => (
                             <span
