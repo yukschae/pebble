@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  /* ── 1. build Supabase client ─────────────────────────────────── */
+  /* ── 1. parse body & build Supabase client ───────────────────── */
+  const { socialIssue = null } = await req.json().catch(() => ({ socialIssue: null }))
   const token = req.headers.get("authorization")?.replace("Bearer ", "") ?? undefined
 
   const supabase =
@@ -83,47 +84,53 @@ export async function POST(req: NextRequest) {
     const oceanDetail   = ocean?.[0]?.results ? JSON.stringify(ocean[0].results, null, 2) : "{}"
 
     /* 5. craft prompt --------------------------------------------- */
-    const prompt = `
-あなたはキャリア教育アプリのAIアシスタントです。ユーザーの「パッションシャトル」を提案します。
+        const prompt = `あなたはキャリア探究アプリ **LimitFree** の AI アシスタントです。  
+ユーザーのデータと社会課題意識を踏まえ、  
+**「動き + 対象/手段 + 意図/視点 + 人」**\u200bで 1行に凝縮した "パッションシャトル" を提案してください。  
+（例）「里山と都会をぐるっと循環でつなげる人」、「古着で誰でも自己表現！ジェンダーフリーリメイクを広める人"
+
+────────────────────────
+▼ ユーザー情報
+- 名前 : ${profile?.display_name ?? "ゲスト"}
+- RIASEC タイプ : ${riasecCode}
+- RIASEC 詳細 : ${riasecDetail}
+- OCEAN 詳細 : ${oceanDetail}
+- 関心を寄せる社会課題 : ${JSON.stringify(socialIssue, null, 2)}
 
 ▼ パッションシャトルとは
-ユーザーの興味を掛け合わせて生み出す、将来に繋がり社会に貢献できる興味=探究テーマ。重要なのは、従来の具体的な職業名ではなく、多少抽象的でオープンなキャリアパスをタイトルとすること。あくまで参考までの例ですが、「アートxスポーツ」というような感じです。詳細説明では、具体的なイメージと社会との繋がりの可能性をいくつか例示する。中学生でもわかるレベルの言葉で回答すること。
+- *内発的動機型* : 好奇心・楽しさが源（例: "数式で物語を紡ぐ人"）  
+- *外発的目的型* : 社会的インパクトが源（例:"捨てられた服に第二の命を与える人"）  
+- *ミックス型*   : 両者をブレンド（例:"AIアートで医療体験を癒やす人"）  
+- 従来の職業名を避け、**抽象度＞具体度** のタイトルにする。  
+- 中学生でも理解できる言葉を用いる。
 
-▼ ユーザー情報
-- 名前: ${profile?.display_name ?? "ゲスト"}
-- RIASECタイプ: ${riasecCode}
-- RIASEC詳細: ${riasecDetail}
-- OCEAN詳細:  ${oceanDetail}
+▼ 出力指示
+1. **5 件** のパッションシャトルを提案する。
+2. 各提案は以下キーを必ず含む。
 
-▼ 指示
-1. ユーザーの興味・特性を踏まえて **5件** のパッションシャトルを提案せよ。
-2. 提案ごとに以下のキーを含むこと:
-   - title        : タイトル
-   - description  : 詳細説明
-   - tags         : キーワード配列
-3. **JSONのみ** を返すこと。余計な文は書かない。
+| キー | 内容 |
+|----|------|
+| title | 「動き＋対象＋独自視点+人」を 20字以内で。|
+| informative_description | ① どんな活動か（ワクワク要素）<br>② 社会や周囲とどう繋がるか・価値を提供できるのか（外発的意義）<br>③ RIASEC／OCEAN のタイプにどこがマッチするかを明示 ─ 上記①②③を 情報調・3〜5文 で整理し、語調はやや堅め・専門用語は最小限。|
+| colloquial_description | informative_description と同じ①②③を 高校生に話しかけるフレンドリーな口調 で3〜5文に言い換える。難しいカタカナ語は控えつつ、具体的な場面をイメージできるようにする。|
+| tags | 関連キーワード 3‑5 個|
 
-▼ フォーマット
-{
-  "suggestions": [
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] }
-  ]
-}
-`
+3. **JSON 形式のみ** を返す。余計なテキストは絶対に書かない。
+4. 日本語で出力する。
+5. 不要な改行・コメントは入れない。
+6. 各パッションシャトルは、できるだけ多様な5種類を揃えて。研究的なプロジェクトやアートのプロジェクト、起業など、クリエイティブなものの比率を大きく持ちつつ、1-2個は企業に勤めてる前提で目指せる内容を提示して（数はRIASEC結果次第; 企業的が一番高ければ2-3個、など）。
+7. ${socialIssue ? `${socialIssue.title} の"attachment" (1-10の値)は"title"の社会課題への関心の強さを表すので、数値によって、その社会課題に関連したパッションシャトルの提案数を調整して。残りは"others"の社会課題に関連するパッションシャトルを提案して。` : ""}`
+
 
     /* 6. call Anthropic ------------------------------------------- */
     const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: anthropicHeaders(process.env.ANTHROPIC_API_KEY!),
       body: JSON.stringify({
-        model: "claude-3-haiku-20240307",
+        model: "claude-sonnet-4-20250514",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 1500,
+        temperature: 1.0,
+        max_tokens: 3000,
       }),
     })
 

@@ -54,6 +54,7 @@ import { AuthCheck } from "@/components/auth/auth-check"
 import { useAuthContext } from "@/lib/supabase"
 import DashboardTutorial from "@/components/dashboard-tutorial"
 import ProfileSetupDialog from "@/components/profile-setup"
+import SocialIssueDialog from "@/components/social-issue-dialog"
 
 // Suggested types (you might need to adjust based on actual data structure)
 interface RiasecResultDetails {
@@ -83,7 +84,8 @@ interface OceanData {
 interface PassionShuttleData {
   id: number; // Or string, adjust as needed
   title: string;
-  description: string;
+  informative_description: string;
+  colloquial_description: string;
   tags: string[];
   selected: boolean;
   // Add other properties
@@ -123,6 +125,7 @@ export default function Dashboard() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [tutorialDone, setTutorialDone] = useState(false)
   const [showProfileSetup, setShowProfileSetup] = useState(false)
+  const [showIssueSetup, setShowIssueSetup] = useState(false)
 
   useEffect(() => {
     console.log("Dashboard user effect triggered:", { userId: user?.id })
@@ -684,7 +687,7 @@ export default function Dashboard() {
                       </p>
                       <Button
                         className="bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700"
-                        onClick={() => router.push("/passion-shuttle")}
+                        onClick={() => setShowIssueSetup(true)}
                       >
                         パッションシャトルを設定する
                       </Button>
@@ -983,6 +986,14 @@ export default function Dashboard() {
         force={!userProfile || !userProfile.display_name || !userProfile.avatar}
       />
       <ProfileSetupDialog open={showProfileSetup} onClose={() => setShowProfileSetup(false)} />
+      <SocialIssueDialog
+        open={showIssueSetup}
+        onOpenChange={(o) => !o && setShowIssueSetup(false)}
+        onComplete={() => {
+          setShowIssueSetup(false)
+          router.push("/passion-shuttle")
+        }}
+      />
     </AuthCheck>
   )
 }

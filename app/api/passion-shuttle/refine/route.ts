@@ -87,9 +87,7 @@ export async function POST(req: NextRequest) {
 
     /* ── 5. craft prompt ────────────────────────────────────────── */
     const prompt = `
-あなたはキャリア教育アプリのAIアシスタントです。以下の「パッションシャトル」提案をユーザーの
-フィードバックに基づき既存の5つ全てを変更し、洗練してください。▼ パッションシャトルとは
-ユーザーの興味を掛け合わせて生み出す、将来に繋がり社会に貢献できる興味=探究テーマ。重要なのは、従来の具体的な職業名ではなく、多少抽象的でオープンなキャリアパスをタイトルとすること。あくまで参考までの例ですが、「アートxスポーツ」というような感じです。詳細説明では、具体的なイメージと社会との繋がりの可能性をいくつか例示する。中学生でもわかるレベルの言葉で回答すること。
+あなたはキャリア探究アプリ **LimitFree** の AI アシスタントです。以下の「パッションシャトル」提案をユーザーのフィードバックに基づき全て刷新してください。
 
 ▼ ユーザー情報
 - 名前          : ${profile?.display_name ?? "ゲスト"}
@@ -102,16 +100,16 @@ ${feedback}
 
 ▼ 指示
 1. 5件の提案それぞれを改善せよ。
-2. 各提案は { "title", "description", "tags": [] } を含む。
+2. 各提案は { "title", "informative_description", "colloquial_description", "tags": [] } を含む。
 3. 回答は **下記 JSON フォーマットのみ** で返すこと。
 
 {
   "suggestions": [
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] },
-    { "title": "", "description": "", "tags": [] }
+    { "title": "", "informative_description": "", "colloquial_description": "", "tags": [] },
+    { "title": "", "informative_description": "", "colloquial_description": "", "tags": [] },
+    { "title": "", "informative_description": "", "colloquial_description": "", "tags": [] },
+    { "title": "", "informative_description": "", "colloquial_description": "", "tags": [] },
+    { "title": "", "informative_description": "", "colloquial_description": "", "tags": [] }
   ]
 }`
 
@@ -120,7 +118,7 @@ ${feedback}
       method: "POST",
       headers: anthropicHeaders(process.env.ANTHROPIC_API_KEY!),
       body: JSON.stringify({
-        model: "claude-3-haiku-20240307",
+        model: "claude-sonnet-4-20250514",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 2000,

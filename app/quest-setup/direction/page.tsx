@@ -302,7 +302,7 @@ export default function QuestDirectionPage() {
                   </div>
                   <div className="flex-1">
                     <div className="font-bold text-foreground flex items-center">「{passionShuttle.title}」</div>
-                    <p className="text-gray-300 mt-2">{passionShuttle.description}</p>
+                    <p className="text-gray-300 mt-2">{passionShuttle.colloquial_description}</p>
                     <div className="flex gap-2 mt-3">
                       {passionShuttle.tags.map((tag: string, index: number) => (
                         <span

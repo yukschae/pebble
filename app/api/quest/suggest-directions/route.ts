@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 あなたは探究学習のエキスパートです。以下のパッションシャトルに基づいて、具体的な探究プロジェクトの方向性を5つ提案してください。言語は日本語です。
 
 パッションシャトル：「${passionShuttle.title}」
-説明：${passionShuttle.description}
+説明：${passionShuttle.informative_description}
 タグ：${passionShuttle.tags.join(", ")}
 
 各方向性には以下の要素を含めてください：

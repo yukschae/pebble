@@ -69,6 +69,7 @@ export default function PassionShuttlePage() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null)
   const [feedback, setFeedback] = useState("")
   const [showStars, setShowStars] = useState(false)
+  const [showInfo, setShowInfo] = useState<number | null>(null)
 
   useEffect(() => {
     setShowStars(true)
@@ -127,10 +128,12 @@ export default function PassionShuttlePage() {
       setError(null)
 
       const access = await fetchAuthToken()
+      const issueJson = sessionStorage.getItem("socialIssue")
+      const socialIssue = issueJson ? JSON.parse(issueJson) : null
       const res = await fetch("/api/passion-shuttle/suggest", {
         method: "POST",
         headers: authHeaders(access),                          // ★
-        body: JSON.stringify({}),
+        body: JSON.stringify({ socialIssue }),
       })
 
       const txt = await res.text()
@@ -138,7 +141,9 @@ export default function PassionShuttlePage() {
 
       if (!res.ok) throw new Error(data.error || "提案の生成に失敗しました。")
       setSuggestions(data.suggestions)
+      sessionStorage.removeItem("socialIssue")
       setSelectedSuggestion(null)
+      setShowInfo(null)
     } catch (e) {
       console.error(e)
       setError(`提案の生成中にエラーが発生しました: ${(e as Error).message}`)
@@ -170,6 +175,7 @@ export default function PassionShuttlePage() {
       if (!res.ok) throw new Error(data.error || "提案の修正に失敗しました。")
       setSuggestions(data.suggestions)
       setSelectedSuggestion(null)
+      setShowInfo(null)
       setFeedback("")
     } catch (e) {
       console.error(e)
@@ -189,7 +195,13 @@ export default function PassionShuttlePage() {
       setError(null)
 
       const s = suggestions[selectedSuggestion]
-      await savePassionShuttleToDb(user.id, s.title, s.description, s.tags)
+      await savePassionShuttleToDb(
+        user.id,
+        s.title,
+        s.informative_description,
+        s.colloquial_description,
+        s.tags,
+      )
 
       router.push("/dashboard")
     } catch (e) {
@@ -373,7 +385,20 @@ export default function PassionShuttlePage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-gray-300 mb-4">{suggestion.description}</p>
+                        <p className="text-gray-300 mb-2">
+                          {showInfo === index
+                            ? suggestion.informative_description
+                            : suggestion.colloquial_description}
+                        </p>
+                        <button
+                          className="text-xs text-blue-300 underline mb-2"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowInfo(showInfo === index ? null : index)
+                          }}
+                        >
+                          {showInfo === index ? "フレンドリーに読む" : "ちゃんとした説明はここ！"}
+                        </button>
                         <div className="flex flex-wrap gap-2">
                           {suggestion.tags.map((tag: string, tagIndex: number) => (
                             <span

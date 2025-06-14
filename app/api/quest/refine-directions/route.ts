@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 あなたは探究学習のエキスパートです。以下のパッションシャトルと現在の方向性提案に基づいて、ユーザーのフィードバックを反映した新しい方向性を5つ提案してください。言語は日本語です。
 
 パッションシャトル：「${passionShuttle.title}」
-説明：${passionShuttle.description}
+説明：${passionShuttle.informative_description}
 タグ：${passionShuttle.tags.join(", ")}
 
 現在の方向性提案：
@@ -75,8 +75,8 @@ JSONのみを返してください。説明や前置きは不要です。
       const { text } = await generateText({
         model: anthropic("claude-3-haiku-20240307"),
         prompt: prompt,
-        temperature: 0.7,
-        maxTokens: 2000,
+        temperature: 1,
+        maxTokens: 3000,
       })
 
       // JSONをパース

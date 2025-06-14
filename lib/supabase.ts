@@ -640,7 +640,13 @@ export async function getLatestPassionShuttleSuggestions(
 }
 
 // パッションシャトルを保存する関数
-export async function savePassionShuttle(userId: string, title: string, description: string, tags: string[]) {
+export async function savePassionShuttle(
+  userId: string,
+  title: string,
+  informativeDescription: string,
+  colloquialDescription: string,
+  tags: string[],
+) {
   try {
     console.log("Saving passion shuttle for:", userId)
     const supabase = getSupabaseClient()
@@ -660,7 +666,8 @@ export async function savePassionShuttle(userId: string, title: string, descript
     const { error } = await supabase.from("passion_shuttles").insert({
       user_id: userId,
       title: title,
-      description: description,
+      informative_description: informativeDescription,
+      colloquial_description: colloquialDescription,
       tags: tags,
       selected: true,
       created_at: new Date().toISOString(),

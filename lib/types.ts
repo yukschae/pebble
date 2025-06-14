@@ -1,15 +1,21 @@
 import type { ComponentType } from "react"
 
 export interface PassionSuggestion {
-    title: string;
-    description: string;
-    tags: string[];
-  }
+  title: string
+  informative_description: string
+  colloquial_description: string
+  tags: string[]
+}
   
 export interface PassionSuggestionRow {
     suggestions: PassionSuggestion[];
 }
-  
+
+export interface SocialIssuePreference {
+  title: string
+  attachment: number
+  others: string[]
+}
  
 export type Maybe<T> = T | null | undefined;
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };

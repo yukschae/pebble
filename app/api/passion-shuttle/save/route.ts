@@ -10,10 +10,10 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 
 export async function POST(req: NextRequest) {
   /* 1. body */
-  const { title, description, tags } = await req.json()
-  if (!title || !description || !tags)
+  const { title, informative_description, colloquial_description, tags } = await req.json()
+  if (!title || !informative_description || !colloquial_description || !tags)
     return NextResponse.json(
-      { error: "title, description, and tags are required" },
+      { error: "title, informative_description, colloquial_description and tags are required" },
       { status: 400 },
     )
 
@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
   const supabase =
     token
       ? createClient(
+
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
           { global: { headers: { Authorization: `Bearer ${token}` } } },
@@ -45,7 +46,8 @@ export async function POST(req: NextRequest) {
       {
         user_id: userId,
         title,
-        description,
+        informative_description,
+        colloquial_description,
         tags,
         selected: true,
         updated_at: new Date().toISOString(),
