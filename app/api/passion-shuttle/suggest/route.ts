@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
 | colloquial_description | informative_description と同じ①②③を 高校生に話しかけるフレンドリーな口調 で3〜5文に言い換える。難しいカタカナ語は控えつつ、具体的な場面をイメージできるようにする。|
 | tags | 関連キーワード 3‑5 個|
 
-3. **JSON 形式のみ** を返す。余計なテキストは絶対に書かない。
+3. **JSON 形式のみ** を返す。バッククオート・コードフェンス・コメント・改行前後の空白を一切入れない。
 4. 日本語で出力する。
 5. 不要な改行・コメントは入れない。
 6. 各パッションシャトルは、できるだけ多様な5種類を揃えて。研究的なプロジェクトやアートのプロジェクト、起業など、クリエイティブなものの比率を大きく持ちつつ、1-2個は企業に勤めてる前提で目指せる内容を提示して（数はRIASEC結果次第; 企業的が一番高ければ2-3個、など）。
@@ -146,15 +146,30 @@ export async function POST(req: NextRequest) {
         { status: 502 },
       )
     }
+    const arr = Array.isArray(suggestions)
+    ? suggestions
+    : (suggestions as any).suggestions ?? (suggestions as any).passion_shuttles
 
+  if (!arr || !Array.isArray(arr)) {
+    console.error("[passion-shuttle] invalid suggestions format", raw)
+    return NextResponse.json(
+      { error: "Invalid AI response", details: raw.slice(0, 200) },
+      { status: 502 },
+    )
+  }
+
+  if (typeof suggestions === "string") {
+    console.warn("[passion-shuttle] suggestions is still string ⇒", suggestions.slice(0,120))
+  }
+  
     /* 7. persist & respond ---------------------------------------- */
     await supabase.from("passion_shuttle_suggestions").insert({
       user_id: userId,
-      suggestions: suggestions.suggestions,
+      suggestions: arr,
       created_at: new Date().toISOString(),
     })
 
-    return NextResponse.json(suggestions)
+    return NextResponse.json({ suggestions: arr })
   } catch (err) {
     console.error("[passion-shuttle] unexpected error:", err)
     return NextResponse.json(

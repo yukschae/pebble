@@ -88,6 +88,8 @@ export async function POST(req: NextRequest) {
     /* ── 5. craft prompt ────────────────────────────────────────── */
     const prompt = `
 あなたはキャリア探究アプリ **LimitFree** の AI アシスタントです。以下の「パッションシャトル」提案をユーザーのフィードバックに基づき全て刷新してください。
+**「動き + 対象/手段 + 意図/視点 + 人」**\u200bで 1行に凝縮した "パッションシャトル" を提案してください。  
+（例）「里山と都会をぐるっと循環でつなげる人」、「古着で誰でも自己表現！ジェンダーフリーリメイクを広める人"
 
 ▼ ユーザー情報
 - 名前          : ${profile?.display_name ?? "ゲスト"}
@@ -120,8 +122,8 @@ ${feedback}
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 2000,
+        temperature: 1.0,
+        max_tokens: 3000,
       }),
     })
 
