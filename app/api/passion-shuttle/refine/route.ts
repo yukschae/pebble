@@ -9,7 +9,7 @@ import { createClient } from "@supabase/supabase-js"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { parseJsonSafe } from "@/lib/utils"
 
-export const maxDuration = 30 // Vercel edge timeout
+export const maxDuration = 60 // Vercel edge timeout
 
 /* helper for Anthropic headers */
 const anthropicHeaders = (key: string) => ({
