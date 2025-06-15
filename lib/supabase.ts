@@ -38,6 +38,7 @@ import { createClient } from "@supabase/supabase-js"
 import { createContext, useEffect, useState, useContext } from "react"
 import { useRouter } from "next/navigation"
 import type { PassionSuggestion, PassionSuggestionRow, QuestData } from "@/lib/types";
+import type { Message } from "ai"
 
 export const getSupabaseClientWithAuth = (accessToken?: string) =>
   createClient(
@@ -955,6 +956,43 @@ export async function updateQuestProgress(questId: number, completed: boolean, c
     return true
   } catch (error) {
     console.error("Error updating quest progress:", error)
+    throw error instanceof Error ? error : new Error(String(error))
+  }
+}
+
+// 指定ユーザーのチャット履歴を取得する関数
+export async function getChatHistory(
+  userId: string,
+  accessToken?: string,
+  limit = 50,
+): Promise<Message[]> {
+  try {
+    const supabase = accessToken
+      ? getSupabaseClientWithAuth(accessToken)
+      : getSupabaseClient()
+
+    const { data, error } = await supabase
+      .from("chat_history")
+      .select("id, message, role, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .limit(limit)
+
+    if (error) {
+      console.error("Error fetching chat history:", error)
+      throw error
+    }
+
+    return (
+      data?.map((row) => ({
+        id: String(row.id),
+        createdAt: row.created_at ? new Date(row.created_at) : undefined,
+        role: row.role as "user" | "assistant",
+        content: row.message as string,
+      })) ?? []
+    )
+  } catch (error) {
+    console.error("Error getting chat history:", error)
     throw error instanceof Error ? error : new Error(String(error))
   }
 }

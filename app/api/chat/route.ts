@@ -98,7 +98,7 @@
         /* ── stream Claude-3 Haiku reply ─────────────────────────────── */
         const result = await streamText(
           {
-            model: anthropic("claude-3-haiku-20240307"),
+            model: anthropic("claude-sonnet-4-20250514"),
             messages,
             system: systemPrompt,
             temperature: 0.7,

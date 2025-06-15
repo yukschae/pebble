@@ -10,13 +10,14 @@ import { motion } from "framer-motion"
 import { useChat } from "@ai-sdk/react"
 import ReactMarkdown from "react-markdown"
 import { cn } from "@/lib/utils"
-import { useAuthContext, getSupabaseClient } from "@/lib/supabase"
+import { useAuthContext, getSupabaseClient, getChatHistory } from "@/lib/supabase"
 
 export default function AIChat() {
   /* ── auth -------------------------------------------------------- */
   const { user, loading } = useAuthContext()
   const router             = useRouter()
   const [token, setToken]   = useState<string | null>(null)
+  const [historyLoaded, setHistoryLoaded] = useState(false)
 
   /* fetch the JWT once */
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function AIChat() {
     isLoading,
     error: chatErr,
     reload,
+    setMessages,
   } = useChat({
     api: "/api/chat",
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -53,6 +55,15 @@ export default function AIChat() {
     if (chatErr) setUiErr(`AIアシスタントとの通信に問題が発生しました: ${chatErr.message}`)
   }, [chatErr])
 
+    // fetch existing chat history once the token is available
+    useEffect(() => {
+      if (!token || !user || historyLoaded) return
+      getChatHistory(user.id, token)
+        .then((msgs) => setMessages(msgs))
+        .catch((err) => console.error("[ai-chat] history fetch error:", err))
+        .finally(() => setHistoryLoaded(true))
+    }, [token, user, historyLoaded, setMessages])
+  
   /* helpers */
   const username = user?.email?.split("@")[0] ?? "ゲスト"
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -67,7 +78,7 @@ export default function AIChat() {
     handleInputChange({ target: { value: s } } as ChangeEvent<HTMLInputElement>)
 
   /* ── RENDER ------------------------------------------------------ */
-  if (loading || !token)
+  if (loading || !token || !historyLoaded)
     return (
       <div className="flex h-screen items-center justify-center text-white">
         初期化中…
