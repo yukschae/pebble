@@ -1,5 +1,3 @@
-import { anthropic } from "@ai-sdk/anthropic"
-import { generateText } from "ai"
 import {
   getSelectedPassionShuttle,
   getUserOceanResults,
@@ -7,7 +5,15 @@ import {
 } from "@/lib/server-superbase"
 import { parseJsonSafe } from "@/lib/utils"
 
-export const maxDuration = 30
+const anthropicHeaders = (key: string) => ({
+  "Content-Type": "application/json",
+  "x-api-key": key,
+  "anthropic-version": "2023-06-01",
+})
+
+
+export const maxDuration = 60
+
 
 export async function POST(req: Request) {
   try {
@@ -124,18 +130,24 @@ ${passionStr}
 
 それでは、生徒のための魅力的な探究プロジェクトの方向性を提案してください。`
 
-      // AI SDKを使用してテキストを生成
-      const { text } = await generateText({
-        model: anthropic("claude-sonnet-4-202505147"),
-        prompt: prompt,
-        temperature: 0.7,
-        maxTokens: 2000,
+        // Anthropic API を直接呼び出してテキストを生成
+        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: anthropicHeaders(process.env.ANTHROPIC_API_KEY!),
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+            max_tokens: 2000,
+          }),
       })
 
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/)
+      const aiJson = await aiRes.json()
+      const text = aiJson.content?.[0]?.text ?? ""
+
       let directions
       try {
-        directions = JSON.parse(jsonMatch ? jsonMatch[1] : text)
+        directions = parseJsonSafe(text)
       } catch (parseError) {
         console.error("Error parsing AI response:", parseError, text)
         throw new Error("Invalid JSON response from AI")

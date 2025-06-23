@@ -114,9 +114,10 @@ export default function QuestDirectionPage() {
       setGenerating(true)
       setError(null)
 
+      const access = await fetchAuthToken()
       const response = await fetch("/api/quest/suggest-directions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(access),
         body: JSON.stringify({ userId: user.id }),
       })
 
@@ -153,10 +154,10 @@ export default function QuestDirectionPage() {
       setRefining(true)
       setError(null)
 
-
+      const access = await fetchAuthToken()
       const response = await fetch("/api/quest/refine-directions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(access),
         body: JSON.stringify({
           userId: user.id,
           feedback,
