@@ -3,7 +3,7 @@ import { generateText } from "ai"
 import { getSelectedQuestDirection } from "@/lib/server-superbase"
 import { parseJsonSafe } from "@/lib/utils"
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 export async function POST(req: Request) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     const token = req.headers.get("authorization")?.replace("Bearer ", "")
     // リクエストボディを取得
-    const { userId } = await req.json()
+    const { userId, existingQuests } = await req.json()
 
     if (!userId) {
       return new Response(JSON.stringify({ error: "User ID is required" }), {
@@ -44,46 +44,35 @@ export async function POST(req: Request) {
           ? qd.focus_areas
           : []
 
+          const existing = Array.isArray(existingQuests) && existingQuests.length > 0
+          ? `\n既に設定済みのクエスト:\n${existingQuests
+              .map((q: any, i: number) => `${i + 1}. ${q.title}: ${q.description}`)
+              .join("\n")}`
+          : ""
+  
       // プロンプトを生成
       
-      const prompt = `
-あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、様々な難易度の探究クエストを10個提案してください。言語は日本語です。
+      const prompt = `あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、合計5つの探究クエストを日本語で提案してください。${existing}
 
 クエスト方向性：「${qd.title}」
 説明：${qd.description}
 タグ：${tags.join(", ")}
 
 各クエストには以下の要素を含めてください：
-1. タイトル：具体的で魅力的なクエストタイトル
-2. 説明：クエストの概要（100-150文字程度）
-3. 行動例：具体的なアクション（3-4個）
-4. 成果物：クエスト完了時に得られる成果物
-5. 難易度：1（非常に簡単）～5（非常に難しい）の5段階で評価
-6. 順序：1～10の順番（難易度順ではなく、論理的な進行順）
+1. タイトル
+2. 説明（100-150文字）
+3. 行動例（3-4個）
+4. 成果物
+5. 難易度（1〜5）
+6. 順序（1〜5）
 
-難易度1～5のクエストをバランスよく含めてください。
-
-回答は以下のJSON形式で返してください：
-{
-  "quests": [
-    {
-      "title": "クエストタイトル",
-      "description": "クエストの説明...",
-      "actions": ["行動例1", "行動例2", "行動例3"],
-      "outcome": "成果物の説明",
-      "difficulty": 3,
-      "order": 1
-    },
-    ...
-  ]
-}
-
-JSONのみを返してください。説明や前置きは不要です。
+回答はJSONのみで以下の形式:
+{"quests": [ {"title": "..."} ]}
 `
 
       // AI SDKを使用してテキストを生成
       const { text } = await generateText({
-        model: anthropic("claude-3-haiku-20240307"),
+        model: anthropic("claude-sonnet-4-20250514"),
         prompt: prompt,
         temperature: 0.7,
         maxTokens: 3000,
