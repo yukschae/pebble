@@ -127,7 +127,12 @@ export default function QuestDirectionPage() {
       }
 
       const data = await response.json()
-      setDirections(data.directions || [])
+      setDirections(
+        (data.directions || []).map((d: any) => ({
+          ...d,
+          tags: d.tags || d.keywords || [],
+        })),
+      )
       setSelectedDirection(null)
     } catch (error) {
       console.error("Error generating directions:", error)
@@ -171,7 +176,12 @@ export default function QuestDirectionPage() {
       }
 
       const data = await response.json()
-      setDirections(data.directions || [])
+      setDirections(
+        (data.directions || []).map((d: any) => ({
+          ...d,
+          tags: d.tags || d.keywords || [],
+        })),
+      )
       setSelectedDirection(null)
       setFeedback("")
     } catch (error) {
@@ -309,7 +319,7 @@ export default function QuestDirectionPage() {
                     <div className="font-bold text-foreground flex items-center">「{passionShuttle.title}」</div>
                     <p className="text-gray-300 mt-2">{passionShuttle.colloquial_description}</p>
                     <div className="flex gap-2 mt-3">
-                      {passionShuttle.tags.map((tag: string, index: number) => (
+                    {(passionShuttle.tags || []).map((tag: string, index: number) => (
                         <span
                           key={index}
                           className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full border border-blue-500/30"
