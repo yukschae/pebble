@@ -62,3 +62,37 @@ export async function getSelectedQuestDirection(userId: string, accessToken?: st
     throw error instanceof Error ? error : new Error(String(error))
   }
 }
+
+export async function getUserOceanResults(userId: string, accessToken?: string) {
+  try {
+    const supabase = createServerSupabaseClient(accessToken)
+    const { data, error } = await supabase
+      .from("ocean_results")
+      .select("results")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+    if (error) throw error
+    return data?.[0] ?? null
+  } catch (err) {
+    console.error("[server-supabase] getUserOceanResults error:", err)
+    throw err instanceof Error ? err : new Error(String(err))
+  }
+}
+
+export async function getUserRiasecResults(userId: string, accessToken?: string) {
+  try {
+    const supabase = createServerSupabaseClient(accessToken)
+    const { data, error } = await supabase
+      .from("riasec_results")
+      .select("results")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+    if (error) throw error
+    return data?.[0] ?? null
+  } catch (err) {
+    console.error("[server-supabase] getUserRiasecResults error:", err)
+    throw err instanceof Error ? err : new Error(String(err))
+  }
+}

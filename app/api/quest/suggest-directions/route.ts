@@ -1,6 +1,10 @@
 import { anthropic } from "@ai-sdk/anthropic"
 import { generateText } from "ai"
-import { getSelectedPassionShuttle } from "@/lib/server-superbase"
+import {
+  getSelectedPassionShuttle,
+  getUserOceanResults,
+  getUserRiasecResults,
+} from "@/lib/server-superbase"
 import { parseJsonSafe } from "@/lib/utils"
 
 export const maxDuration = 30
@@ -29,7 +33,18 @@ export async function POST(req: Request) {
 
     try {
       // パッションシャトルを取得
-      const passionShuttle = await getSelectedPassionShuttle(userId, token)
+      const [oceanData, riasecData, passionShuttle] = await Promise.all([
+        getUserOceanResults(userId, token),
+        getUserRiasecResults(userId, token),
+        getSelectedPassionShuttle(userId, token),
+      ])
+
+      if (!oceanData || !riasecData) {
+        return new Response(
+          JSON.stringify({ error: "Missing OCEAN or RIASEC results" }),
+          { status: 404, headers: { "Content-Type": "application/json" } },
+        )
+      }
 
       if (!passionShuttle) {
         return new Response(JSON.stringify({ error: "No passion shuttle found" }), {
@@ -38,46 +53,89 @@ export async function POST(req: Request) {
         })
       }
 
+      const oceanStr = JSON.stringify(oceanData.results, null, 2)
+      const riasecStr = JSON.stringify(riasecData.results, null, 2)
+      const passionStr = JSON.stringify(
+        {
+          title: passionShuttle.title,
+          informative_description: passionShuttle.informative_description,
+          tags: passionShuttle.tags,
+        },
+        null,
+        2,
+      )
+
       // プロンプトを生成
-      const prompt = `
-あなたは探究学習のエキスパートです。以下のパッションシャトルに基づいて、具体的な探究プロジェクトの方向性を5つ提案してください。言語は日本語です。
+      const prompt = `あなたは高校生向けの探究学習AIアドバイザーです。生徒の興味関心と社会貢献を結びつけた、ワクワクするような探究プロジェクトの方向性を提案することが目的です。
 
-パッションシャトル：「${passionShuttle.title}」
-説明：${passionShuttle.informative_description}
-タグ：${passionShuttle.tags.join(", ")}
+まず、生徒の情報を確認してください：
 
-各方向性には以下の要素を含めてください：
-1. タイトル：具体的で魅力的なプロジェクトタイトル
-2. 説明：100-150文字程度の簡潔な説明
-3. タグ：関連するキーワード（3-5個）
+<user_ocean>
+${oceanStr}
+</user_ocean>
 
-回答は以下のJSON形式で返してください：
+次に、生徒のRIASECタイプの情報を確認してください：
+
+<user_riasec>
+${riasecStr}
+</user_riasec>
+
+最後に、パッションシャトルを確認してください：
+
+<passion_shuttle>
+${passionStr}
+</passion_shuttle>
+
+これらの情報を基に、以下の手順で5つの探究プロジェクトの方向性を提案してください：
+
+1. 生徒の特性とパッションシャトルの内容を結びつけ、ワクワクするようなプロジェクトのアイデアを考えてください。
+2. 各プロジェクトについて、以下の要素を含めてください：
+   a. タイトル：高校生がワクワクするような、具体的でキャッチーなプロジェクト名（10語以内）
+   b. 説明（120文字以内）：
+      - プロジェクトの内容（何をするのか）
+      - ワクワクポイント（どこが楽しそうか）
+      - 貢献ポイント（どんな人や社会の役に立つか）
+      - パーソナルポイント（なぜこの生徒に合っているか）
+   c. キーワード：3分間の簡単なリサーチに使える、短くて直感的な単語を4つ
+
+3. 高校生にとってわかりやすく、イメージが湧きやすい表現を心がけてください。敬語ではなくタメ口にしてください。
+4. 専門用語や難しい言葉は避け、漢字の熟語を多用しないことを意識し、親しみやすい言葉で説明してください。
+5. 各プロジェクトが生徒の特性（OCEAN、RIASEC）とどう関連しているかを考慮してください。
+
+まず、<project_ideation>タグ内でアイデアを練ってください：
+
+1. 生徒の特性とパッションシャトルの内容に基づいて、10個の初期プロジェクトアイデアを挙げてください。
+2. 各アイデアをOCEAN、RIASEC、パッションシャトルの基準に照らし合わせて評価し、10点満点で採点してください。
+3. 採点結果に基づいて、上位5つのアイデアを選択してください。
+4. 選択された各アイデアについて、プロジェクトの要素（タイトル、説明、キーワード）の概要を作成してください。
+
+その後、最終的な提案をJSON形式で出力してください。
+
+出力例（イメージ）：
 {
   "directions": [
-    {
-      "title": "プロジェクトタイトル",
-      "description": "プロジェクトの説明...",
-      "tags": ["タグ1", "タグ2", "タグ3"]
-    },
-    ...
+    {"title": "伝統のワザを世界に発信！SNSで魅力を伝えよう",
+      "description": "地元の伝統工芸のすごさを動画で紹介し、世界中に広めるチャレンジ！職人さんにインタビューしたり、製作風景を撮影して、英語字幕付きでTikTokやInstagramに投稿しよう。動画編集や発信が好きなあなたにぴったり。文化の魅力を伝える楽しさと、喜んでもらえる感動が味わえるよ！",
+      "keywords": ["伝統工芸", "TikTok活用", "日本文化", "職人ストーリー"]
+    }
+    // ... 合計5つのプロジェクト
   ]
 }
 
-JSONのみを返してください。説明や前置きは不要です。
-`
+それでは、生徒のための魅力的な探究プロジェクトの方向性を提案してください。`
 
       // AI SDKを使用してテキストを生成
       const { text } = await generateText({
-        model: anthropic("claude-3-haiku-20240307"),
+        model: anthropic("claude-sonnet-4-202505147"),
         prompt: prompt,
         temperature: 0.7,
         maxTokens: 2000,
       })
 
-      // JSONをパース
+      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/)
       let directions
       try {
-        directions = parseJsonSafe(text)
+        directions = JSON.parse(jsonMatch ? jsonMatch[1] : text)
       } catch (parseError) {
         console.error("Error parsing AI response:", parseError, text)
         throw new Error("Invalid JSON response from AI")

@@ -130,7 +130,11 @@ export default function QuestDirectionPage() {
       setSelectedDirection(null)
     } catch (error) {
       console.error("Error generating directions:", error)
-      setError(`方向性の生成中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`)
+      setError(
+        `方向性の生成中にエラーが発生しました: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      )
     } finally {
       setGenerating(false)
     }
