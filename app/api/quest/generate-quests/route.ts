@@ -44,16 +44,14 @@ export async function POST(req: Request) {
           ? qd.focus_areas
           : []
 
-          const existing = Array.isArray(existingQuests) && existingQuests.length > 0
-          ? `\n既に設定済みのクエスト:\n${existingQuests
-              .map((q: any, i: number) => `${i + 1}. ${q.title}: ${q.description}`)
-              .join("\n")}`
-          : ""
-  
-      // プロンプトを生成
-      
-      const prompt = `あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、合計5つの探究クエストを日本語で提案してください。${existing}
+      const existing = Array.isArray(existingQuests) && existingQuests.length > 0
+        ? `\n既に設定済みのクエスト:\n${existingQuests
+            .map((q: any, i: number) => `${i + 1}. ${q.title}: ${q.description}`)
+            .join("\n")}`
+        : ""
 
+      // プロンプトを生成
+      const prompt = `あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、合計5つの探究クエストを日本語で提案してください。${existing}
 クエスト方向性：「${qd.title}」
 説明：${qd.description}
 タグ：${tags.join(", ")}

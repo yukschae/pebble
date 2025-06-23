@@ -42,13 +42,21 @@ export default function QuestSetupPage() {
   const [saving, setSaving] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [questDirection, setQuestDirection] = useState<any>(null)
-  const [quests, setQuests] = useState<(QuestForm | null)[]>([null, null, null, null, null])
+  const [quests, setQuests] = useState<(QuestForm | null)[]>([
+    null,
+    null,
+    null,
+    null,
+    null,
+  ])
   const [editing, setEditing] = useState<number | null>(null)
   const [showStars, setShowStars] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getSupabaseClient().auth.getSession().then(({ data }) => setToken(data.session?.access_token ?? null))
+    getSupabaseClient().auth
+      .getSession()
+      .then(({ data }) => setToken(data.session?.access_token ?? null))
   }, [])
 
   const fetchAuthToken = async () => {
@@ -75,13 +83,13 @@ export default function QuestSetupPage() {
     try {
       setLoading(true)
       setError(null)
-
       const direction = await getSelectedQuestDirection(user.id)
       if (!direction) {
-        setError("クエスト方向性が設定されていません。先にクエスト方向性を設定してください。")
+        setError(
+          "クエスト方向性が設定されていません。先にクエスト方向性を設定してください。",
+        )
         return
       }
-
       setQuestDirection(direction)
       const existing = await getUserQuests(user.id)
       if (existing && existing.length > 0) {
@@ -111,7 +119,6 @@ export default function QuestSetupPage() {
     try {
       setGenerating(true)
       setError(null)
-
       const access = await fetchAuthToken()
       const response = await fetch("/api/quest/generate-quests", {
         method: "POST",
@@ -121,12 +128,10 @@ export default function QuestSetupPage() {
           existingQuests: quests.filter((q) => q),
         }),
       })
-
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.error || "生成に失敗しました")
       }
-
       const data = await response.json()
       const arr = new Array(5).fill(null) as (QuestForm | null)[]
       ;(data.quests || []).slice(0, 5).forEach((q: any, i: number) => {
@@ -142,7 +147,9 @@ export default function QuestSetupPage() {
       setQuests(arr)
     } catch (err) {
       console.error("generate", err)
-      setError(`クエスト生成中にエラーが発生しました: ${err instanceof Error ? err.message : String(err)}`)
+      setError(
+        `クエスト生成中にエラーが発生しました: ${err instanceof Error ? err.message : String(err)}`,
+      )
     } finally {
       setGenerating(false)
     }
@@ -153,28 +160,30 @@ export default function QuestSetupPage() {
     try {
       setSaving(true)
       setError(null)
-
-      const payload = quests.map((q, idx) =>
-        q
-          ? {
-              title: q.title,
-              description: q.description,
-              actions: q.actions.split(/\n+/).filter(Boolean),
-              outcome: q.outcome,
-              difficulty: q.difficulty,
-              planet: q.planet || "gray",
-              order: idx,
-              completed: false,
-              current: idx === 0,
-            }
-          : null,
-      ).filter(Boolean)
-
+      const payload = quests
+        .map((q, idx) =>
+          q
+            ? {
+                title: q.title,
+                description: q.description,
+                actions: q.actions.split(/\n+/).filter(Boolean),
+                outcome: q.outcome,
+                difficulty: q.difficulty,
+                planet: q.planet || "gray",
+                order: idx,
+                completed: false,
+                current: idx === 0,
+              }
+            : null,
+        )
+        .filter(Boolean)
       await saveQuests(user.id, payload as any[])
       router.push("/dashboard")
     } catch (err) {
       console.error("save", err)
-      setError(`クエストの保存中にエラーが発生しました: ${err instanceof Error ? err.message : String(err)}`)
+      setError(
+        `クエストの保存中にエラーが発生しました: ${err instanceof Error ? err.message : String(err)}`,
+      )
     } finally {
       setSaving(false)
     }
@@ -185,17 +194,31 @@ export default function QuestSetupPage() {
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ delay: index * 0.2 }}
-      className="relative w-60 h-40 bg-gray-800/50 rounded-xl border border-white/10 flex flex-col items-center justify-center mx-2"
+      className="relative w-60 h-44 bg-gradient-to-br from-gray-800/70 via-gray-700/60 to-gray-900/70 rounded-2xl border border-white/10 shadow-lg backdrop-blur-md flex flex-col items-center justify-center mx-4 snap-start"
     >
+      <div className="absolute top-2 left-2 text-sm font-bold text-white/80">
+        {index + 1}
+      </div>
       {quest ? (
         <>
-          <div className="text-center font-semibold px-2 text-white">{quest.title}</div>
-          <Button size="sm" variant="secondary" className="mt-2" onClick={() => setEditing(index)}>
+          <div className="text-center font-semibold px-2 text-white">
+            {quest.title}
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="mt-2"
+            onClick={() => setEditing(index)}
+          >
             クエストを変更する
           </Button>
         </>
       ) : (
-        <Button variant="ghost" className="animate-pulse" onClick={() => setEditing(index)}>
+        <Button
+          variant="ghost"
+          className="animate-pulse"
+          onClick={() => setEditing(index)}
+        >
           クエストを設定する
         </Button>
       )}
@@ -224,10 +247,26 @@ export default function QuestSetupPage() {
             <DialogTitle>クエスト{index + 1}を編集</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <Input placeholder="タイトル" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <Textarea placeholder="説明" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <Textarea placeholder="行動例 (改行区切り)" value={form.actions} onChange={(e) => setForm({ ...form, actions: e.target.value })} />
-            <Input placeholder="成果物" value={form.outcome} onChange={(e) => setForm({ ...form, outcome: e.target.value })} />
+            <Input
+              placeholder="タイトル"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
+            <Textarea
+              placeholder="説明"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+            <Textarea
+              placeholder="行動例 (改行区切り)"
+              value={form.actions}
+              onChange={(e) => setForm({ ...form, actions: e.target.value })}
+            />
+            <Input
+              placeholder="成果物"
+              value={form.outcome}
+              onChange={(e) => setForm({ ...form, outcome: e.target.value })}
+            />
           </div>
           <DialogFooter className="mt-4">
             <DialogClose asChild>
@@ -245,26 +284,26 @@ export default function QuestSetupPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 text-gray-100">
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <AnimatePresence>
-            {showStars && Array.from({ length: 80 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-white rounded-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0.1, 0.8, 0.1], scale: [0.8, 1.2, 0.8] }}
-                transition={{
-                  duration: 2 + Math.random() * 5,
-                  repeat: Number.POSITIVE_INFINITY,
-                  delay: Math.random() * 5,
-                }}
-                style={{
-                  top: `${Math.random() * 100}%`,
-                  left: `${Math.random() * 100}%`,
-                }}
-              />
-            ))}
+            {showStars &&
+              Array.from({ length: 80 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white rounded-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0.1, 0.8, 0.1], scale: [0.8, 1.2, 0.8] }}
+                  transition={{
+                    duration: 2 + Math.random() * 5,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: Math.random() * 5,
+                  }}
+                  style={{
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
+                  }}
+                />
+              ))}
           </AnimatePresence>
         </div>
-
         <div className="container mx-auto px-4 py-12 max-w-5xl">
           <div className="flex justify-between items-center mb-8">
             <button
@@ -308,7 +347,7 @@ export default function QuestSetupPage() {
                 </Button>
               </div>
 
-              <div className="flex justify-center overflow-x-auto pb-6 mb-6">
+              <div className="flex overflow-x-auto pb-6 mb-6 px-4 space-x-4 snap-x snap-mandatory">
                 {quests.map((q, idx) => (
                   <div key={idx} className="relative">
                     <Card quest={q} index={idx} />
@@ -324,7 +363,9 @@ export default function QuestSetupPage() {
                 </Button>
               </div>
 
-              {error && <div className="mt-6 text-center text-red-400">{error}</div>}
+              {error && (
+                <div className="mt-6 text-center text-red-400">{error}</div>
+              )}
             </>
           )}
         </div>
