@@ -23,6 +23,7 @@ import {
   useAuthContext,
 } from "@/lib/supabase"
 import { AuthCheck } from "@/components/auth/auth-check"
+
 interface Quest {
   id: number
   title: string
@@ -41,9 +42,9 @@ export default function QuestSetupPage() {
   const { user } = useAuthContext()
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [generating, setGenerating] = useState(false)
   const [questDirection, setQuestDirection] = useState<any>(null)
   const [quests, setQuests] = useState<Quest[]>(
     Array(5)
@@ -448,7 +449,7 @@ export default function QuestSetupPage() {
                   ))}
                 </div>
 
-                {getFilledQuestsCount() > 0 && getFilledQuestsCount() < 5 && (
+                {getFilledQuestsCount() < 5 && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
