@@ -103,7 +103,7 @@ export function AuthCheck({ children }: AuthCheckProps) {
   if (loading) {
     console.log("AuthCheck: RENDERING loading spinner (loading is true).");
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="flex items-center justify-center min-h-dvh bg-gray-900">
         <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -120,7 +120,7 @@ export function AuthCheck({ children }: AuthCheckProps) {
     // It's often better to show a loading/redirecting indicator here too,
     // rather than null, if the redirect is expected.
     return (
-     <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="flex items-center justify-center min-h-dvh bg-gray-900">
          <p className="text-white">Redirecting to login...</p>
      </div>
     );

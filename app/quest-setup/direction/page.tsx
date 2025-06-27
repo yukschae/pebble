@@ -224,7 +224,7 @@ export default function QuestDirectionPage() {
 
   return (
     <AuthCheck>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 text-gray-100">
+       <div className="min-h-dvh bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 text-gray-100">
         {/* Stars background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <AnimatePresence>

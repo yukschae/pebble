@@ -148,7 +148,7 @@ export default function OceanResults() {
   const careerSuggestions = results?.scores ? suggestOceanCareers(results.scores) : null
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+    <div className="min-h-dvh bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <div className="flex justify-between items-center mb-8">
           <button

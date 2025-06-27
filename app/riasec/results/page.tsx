@@ -247,7 +247,7 @@ export default function RiasecResults() {
   const radarChartData = getRadarChartData()
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 text-gray-100">
+    <div className="flex min-h-dvh bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 text-gray-100">
       {/* Stars background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <AnimatePresence>

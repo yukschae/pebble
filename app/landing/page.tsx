@@ -69,7 +69,8 @@ export default function LandingPage() {
   }
 
   return (
-    <div ref={mainRef} className="min-h-screen overflow-x-hidden">
+    
+    <div ref={mainRef} className="min-h-dvh overflow-x-hidden">
       {/* Stars background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <AnimatePresence>
@@ -157,7 +158,7 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* Hero Section */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden" ref={heroRef}>
+      <div className="relative min-h-dvh flex items-center justify-center overflow-hidden" ref={heroRef}>
         <motion.div className="absolute inset-0 z-0" style={{ y: y1, opacity: opacity1 }}>
           <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-indigo-900/50 dark:from-indigo-900/50 light:from-indigo-100/50 to-transparent" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-purple-500/20 blur-3xl" />
