@@ -500,7 +500,9 @@ export default function QuestSetupPage() {
                         </>
                       )}
                     </button>
-                  </motion.div>
+                  </motion.div> 
+
+              
                 )}
               </div>
 
@@ -538,7 +540,7 @@ export default function QuestSetupPage() {
                 className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-semibold text-white">クエスト {editingCard! + 1} を編集</h3>
+                  <h2 className="text-xl font-semibold text-white">クエスト {editingCard! + 1} を編集</h2>
                   <button onClick={cancelCardEdit} className="p-2 hover:bg-gray-700 rounded-lg">
                     <X className="w-5 h-5 text-gray-400" />
                   </button>

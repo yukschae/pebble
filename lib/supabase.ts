@@ -1063,3 +1063,45 @@ export async function checkTablesExist() {
     }
   }
 }
+
+// 新しい宇宙ログ取得関数 (簡易版)
+export async function getAdventureStories(userId: string, limit = 5) {
+  console.log('Fetching adventure stories for', userId)
+  try {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase
+      .from('space_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error) throw error
+    return data || []
+  } catch (err) {
+    console.error('Error fetching adventure stories:', err)
+    return []
+  }
+}
+
+export async function saveAdventureStory(
+  userId: string,
+  explorationId: number,
+  content: string,
+  logType: string,
+) {
+  console.log('Saving adventure story for', userId)
+  try {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.from('space_logs').insert({
+      user_id: userId,
+      exploration_id: explorationId,
+      log_content: content,
+      log_type: logType,
+    })
+    if (error) throw error
+    return true
+  } catch (err) {
+    console.error('Error saving story:', err)
+    return false
+  }
+}
