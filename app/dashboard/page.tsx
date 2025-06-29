@@ -32,7 +32,7 @@ import { CommanderMessageBoard } from "@/components/commander-message-board"
 import { AuthCheck } from "@/components/auth/auth-check"
 import { EXPLORER_TYPES, getEnergyForNextLevel } from "@/lib/space-rpg-system"
 import { CommanderTutorial } from "@/components/commander-tutorial"
-import { DisplayNameDialog } from "@/components/display-name-dialog"
+import { CommanderNamePrompt } from "@/components/commander-name-prompt"
 
 interface DashboardData {
   riasecResults: any
@@ -514,7 +514,7 @@ export default function Dashboard() {
         </div>
       </div>
       {showNameDialog && (
-        <DisplayNameDialog open={showNameDialog} onSave={handleSaveName} />
+        <CommanderNamePrompt onSave={handleSaveName} onClose={() => setShowNameDialog(false)} />
       )}
       {showTutorial && (
         <CommanderTutorial onComplete={() => setShowTutorial(false)} />
