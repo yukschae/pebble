@@ -42,7 +42,7 @@ function Planet2D({ planet, isSelected, onClick, status }: {
   onClick: () => void
   status: string
 }) {
-  const planetType = PLANET_TYPES[planet.planetType]
+  const planetType = PLANET_TYPES[planet.planetType] || PLANET_TYPES.exploration
 
   return (
     <motion.div
