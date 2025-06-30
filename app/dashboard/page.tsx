@@ -289,7 +289,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <motion.button
-                      onClick={() => router.push(`/quest-reflection/${currentQuest.id}`)}
+                      onClick={() => router.push(`/planet-exploration/${currentQuest.id}`)}
                       className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 rounded-xl text-white font-medium shadow-lg"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}

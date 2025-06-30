@@ -38,6 +38,7 @@ import { createClient } from "@supabase/supabase-js"
 import { createContext, useEffect, useState, useContext } from "react"
 import { useRouter } from "next/navigation"
 import type { PassionSuggestion, PassionSuggestionRow, QuestData } from "@/lib/types";
+import type { PlanetQuest } from "@/lib/space-rpg-system";
 import type { Message } from "ai"
 
 export const getSupabaseClientWithAuth = (accessToken?: string) =>
@@ -1102,6 +1103,65 @@ export async function saveAdventureStory(
     return true
   } catch (err) {
     console.error('Error saving story:', err)
+    return false
+  }
+}
+
+export async function saveQuestReflection(
+  exploration: PlanetQuest,
+): Promise<PlanetQuest & { id: number }> {
+  try {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase
+      .from('space_explorations')
+      .insert([{ ...exploration, created_at: new Date().toISOString() }])
+      .select()
+      .single()
+    if (error) throw error
+    return data as unknown as PlanetQuest & { id: number }
+  } catch (err) {
+    console.error('Error saving quest reflection:', err)
+    throw err instanceof Error ? err : new Error(String(err))
+  }
+}
+
+export async function getUserStats(userId: string) {
+  try {
+    const supabase = getSupabaseClient()
+    const { count } = await supabase
+      .from('space_explorations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('completed', true)
+    return { completedPlanets: count || 0, consecutiveCompletions: 0 }
+  } catch (err) {
+    console.error('Error getting user stats:', err)
+    return { completedPlanets: 0, consecutiveCompletions: 0 }
+  }
+}
+
+export async function updateRPGProfile(
+  userId: string,
+  energy: number,
+  level: number,
+  badges: any[],
+) {
+  try {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.from('rpg_profiles').upsert(
+      {
+        user_id: userId,
+        xp: energy,
+        level,
+        badges,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    )
+    if (error) throw error
+    return true
+  } catch (err) {
+    console.error('Error updating RPG profile:', err)
     return false
   }
 }

@@ -71,10 +71,10 @@ export const SPACE_COMMANDERS = {
         timestamp: new Date().toISOString(),
         read: false,
         actionButton: {
-          text: '探索を完了する',
-          action: 'navigate',
-          route: `/quest-reflection/${currentQuest.id}`,
-        },
+        text: '探索を完了する',
+        action: 'navigate',
+        route: `/planet-exploration/${currentQuest.id}`,
+      },
       })
     }
   
