@@ -203,6 +203,7 @@ export default function QuestSetupPage() {
 
       const access = await fetchAuthToken()
       const filledQuests = quests.filter((q) => q.title.trim() !== "")
+      const remainingCount = Math.max(0, 5 - filledQuests.length)
 
       const response = await fetch("/api/quest/generate-quests", {
         method: "POST",
@@ -210,6 +211,7 @@ export default function QuestSetupPage() {
         body: JSON.stringify({
           userId: user.id,
           existingQuests: filledQuests,
+          count: remainingCount,
         }),
       })
 

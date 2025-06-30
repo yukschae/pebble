@@ -16,8 +16,11 @@ export async function POST(req: Request) {
     }
 
     const token = req.headers.get("authorization")?.replace("Bearer ", "")
-    // リクエストボディを取得
-    const { userId, existingQuests } = await req.json()
+    const { userId, existingQuests, count } = await req.json()
+    const missingCount =
+      typeof count === "number"
+        ? count
+        : Math.max(0, 5 - (Array.isArray(existingQuests) ? existingQuests.length : 0))
 
     if (!userId) {
       return new Response(JSON.stringify({ error: "User ID is required" }), {
@@ -51,7 +54,7 @@ export async function POST(req: Request) {
         : ""
 
       // プロンプトを生成
-      const prompt = `あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、合計5つの探究クエストを日本語で提案してください。${existing}
+      const prompt = `あなたは探究学習のエキスパートです。以下のクエスト方向性に基づいて、残り${missingCount}個の探究クエストのみを日本語で提案してください。${existing}
 クエスト方向性：「${qd.title}」
 説明：${qd.description}
 タグ：${tags.join(", ")}
@@ -64,6 +67,7 @@ export async function POST(req: Request) {
 5. 難易度（1〜5）
 6. 順序（1〜5）
 
+既に設定済みのクエストは変更せず、内容が重複しないようにしてください。
 回答は高校生がわかりやすく理解できるよう、漢字の熟語や専門用語は多用しないでください。
 
 回答はJSONのみで以下の形式:
