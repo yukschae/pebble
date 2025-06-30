@@ -64,8 +64,10 @@ export async function POST(req: Request) {
 5. 難易度（1〜5）
 6. 順序（1〜5）
 
+回答は高校生がわかりやすく理解できるよう、漢字の熟語や専門用語は多用しないでください。
+
 回答はJSONのみで以下の形式:
-{"quests": [ {"title": "..."} ]}
+{"quests": [ {"title": "..."}, {"description": "..."}, {"actions": "..."}, {"outcome": "..."}, {"difficulty": "..."}, {"order": "..."}, ]}
 `
 
       // AI SDKを使用してテキストを生成
