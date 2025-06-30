@@ -21,6 +21,7 @@ import {
   Rocket,
   X,
   ArrowRight,
+  MapPin,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -600,6 +601,17 @@ export default function PlanetMapPage() {
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <span>AI司令部</span>
+            </motion.div>
+
+            <motion.div
+              className="flex items-center p-3 rounded-xl text-blue-200 hover:bg-blue-800/30 hover:text-blue-100 transition-all duration-300 border border-transparent hover:border-blue-400/30 cursor-pointer"
+              whileHover={{ x: 5, transition: { duration: 0.2 } }}
+              onClick={() => router.push("/quest-setup/quests")}
+            >
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 w-10 h-10 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                <MapPin className="w-5 h-5 text-white" />
+              </div>
+              <span>マップ変更</span>
             </motion.div>
 
             <motion.div
