@@ -33,6 +33,8 @@ import { AuthCheck } from "@/components/auth/auth-check"
 import { EXPLORER_TYPES, getEnergyForNextLevel } from "@/lib/space-rpg-system"
 import { CommanderTutorial } from "@/components/commander-tutorial"
 import { CommanderNamePrompt } from "@/components/commander-name-prompt"
+import { riasecDimensions } from "@/lib/riasec-data"
+import { oceanFactors } from "@/lib/ocean-data"
 
 interface DashboardData {
   riasecResults: any
@@ -65,11 +67,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (user && userProfile) {
-      if (!userProfile.display_name) {
+      if (!userProfile.display_name || userProfile.display_name.trim() === "") {
         setShowNameDialog(true)
       } else {
         const completed = localStorage.getItem("limitfree_tutorial_completed")
-        if (!completed) setShowTutorial(true)
+        if (completed !== "true") setShowTutorial(true)
       }
     }
   }, [user, userProfile])
@@ -107,7 +109,7 @@ export default function Dashboard() {
     await updateUserProfile(name)
     setShowNameDialog(false)
     const completed = localStorage.getItem("limitfree_tutorial_completed")
-    if (!completed) setShowTutorial(true)
+    if (completed !== "true") setShowTutorial(true)
   }
 
   const level = userProfile?.level || 1
@@ -185,7 +187,7 @@ export default function Dashboard() {
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-3xl font-bold text-white mb-2">おかえりなさい、{userProfile?.display_name || "Explorer"}飛行士！</h2>
+                      <h2 className="text-3xl font-bold text-white mb-2">おかえりなさい、{userProfile?.display_name || "ことな"}飛行士！</h2>
                       <p className="text-cyan-300">宇宙探索の準備はいかがですか？</p>
                     </div>
                     <motion.div
@@ -330,8 +332,8 @@ export default function Dashboard() {
                         {data.passionShuttle.emoji}
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-white">{data.passionShuttle.name}</h4>
-                        <p className="text-purple-300 text-sm">{data.passionShuttle.type}</p>
+                      <h4 className="text-lg font-semibold text-white">{data.passionShuttle.title}</h4>
+                      <p className="text-purple-300 text-sm">{data.passionShuttle.colloquial_description}</p>
                       </div>
                     </div>
                     <p className="text-gray-300 text-sm">{data.passionShuttle.description}</p>
@@ -446,20 +448,43 @@ export default function Dashboard() {
                       <div className="p-4 bg-gradient-to-br from-blue-900/40 to-indigo-900/40 rounded-xl border border-blue-500/30">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-blue-300 text-sm">RIASEC分析</span>
-                          <span className="text-blue-400 font-bold">{data.riasecResults.score}%</span>
+                          <span className="text-blue-400 font-bold">
+                            {data.riasecResults.results?.threeLetterCode}
+                          </span>
                         </div>
-                        <p className="text-white font-medium">{data.riasecResults.type}</p>
-                        <p className="text-gray-300 text-xs">{data.riasecResults.description}</p>
+                        <p className="text-white font-medium">
+                          {data.riasecResults.results?.sortedDimensions
+                            ?.slice(0, 3)
+                            .map((l: string) =>
+                              riasecDimensions[l as keyof typeof riasecDimensions]?.name,
+                            )
+                            .join("・")}
+                        </p>
                       </div>
                     )}
                     {data.oceanResults && (
                       <div className="p-4 bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-xl border border-purple-500/30">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-purple-300 text-sm">OCEAN分析</span>
-                          <span className="text-purple-400 font-bold">{data.oceanResults.score}%</span>
+                          <span className="text-purple-400 font-bold">
+                            {(() => {
+                              const scores = data.oceanResults.results?.scores || {};
+                              const top = Object.keys(scores).sort(
+                                (a, b) => (scores[b] || 0) - (scores[a] || 0),
+                              )[0] as keyof typeof oceanFactors | undefined;
+                              return top ? oceanFactors[top].name : "";
+                            })()}
+                          </span>
                         </div>
-                        <p className="text-white font-medium">{data.oceanResults.type}</p>
-                        <p className="text-gray-300 text-xs">{data.oceanResults.description}</p>
+                        <p className="text-white font-medium">
+                          {(() => {
+                            const scores = data.oceanResults.results?.scores || {};
+                            const top = Object.keys(scores).sort(
+                              (a, b) => (scores[b] || 0) - (scores[a] || 0),
+                            )[0] as keyof typeof oceanFactors | undefined;
+                            return top ? `${scores[top]}%` : "";
+                          })()}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -480,7 +505,9 @@ export default function Dashboard() {
                   </h3>
                   <div className="space-y-2">
                     <motion.button
-                      onClick={() => router.push("/riasec/assessment")}
+                     onClick={() =>
+                      router.push(data.riasecResults ? "/riasec/results" : "/riasec/assessment")
+                    }
                       className="w-full flex items-center p-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all duration-300 border border-transparent hover:border-white/10"
                       whileHover={{ x: 5 }}
                     >
@@ -489,7 +516,9 @@ export default function Dashboard() {
                       <ChevronRight className="w-4 h-4 ml-auto" />
                     </motion.button>
                     <motion.button
-                      onClick={() => router.push("/ocean/assessment")}
+                      onClick={() =>
+                        router.push(data.oceanResults ? "/ocean/results" : "/ocean/assessment")
+                      }
                       className="w-full flex items-center p-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all duration-300 border border-transparent hover:border-white/10"
                       whileHover={{ x: 5 }}
                     >
