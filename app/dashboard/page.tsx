@@ -168,6 +168,12 @@ export default function Dashboard() {
                   <Trophy className="w-5 h-5 text-yellow-400 mr-2" />
                   <span className="text-white font-bold">Lv.{level}</span>
                 </div>
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm text-gray-400 hover:text-white px-3 py-2 border border-gray-600/30 rounded-lg"
+                >
+                  ログアウト
+                </button>
               </div>
             </div>
           </div>
@@ -442,23 +448,29 @@ export default function Dashboard() {
                   <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                     <Brain className="w-6 h-6 text-cyan-400 mr-2" />
                     適性分析結果
-                  </h3>
+                    </h3>
                   <div className="space-y-4">
                     {data.riasecResults && (
                       <div className="p-4 bg-gradient-to-br from-blue-900/40 to-indigo-900/40 rounded-xl border border-blue-500/30">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-blue-300 text-sm">RIASEC分析</span>
                           <span className="text-blue-400 font-bold">
-                            {data.riasecResults.results?.threeLetterCode}
+                            {(() => {
+                              const sorted = data.riasecResults.results?.sortedDimensions || []
+                              const top = sorted[0] as keyof typeof riasecDimensions | undefined
+                              return top ? riasecDimensions[top].name : ""
+                            })()}
                           </span>
                         </div>
                         <p className="text-white font-medium">
-                          {data.riasecResults.results?.sortedDimensions
-                            ?.slice(0, 3)
-                            .map((l: string) =>
-                              riasecDimensions[l as keyof typeof riasecDimensions]?.name,
+                          {(() => {
+                            const scores = data.riasecResults.results?.dimensionScores || {}
+                            const sorted = Object.keys(scores).sort(
+                              (a, b) => (scores[b] || 0) - (scores[a] || 0),
                             )
-                            .join("・")}
+                            const top = sorted[0] as keyof typeof riasecDimensions | undefined
+                            return top ? `${scores[top]}%` : ""
+                          })()}
                         </p>
                       </div>
                     )}

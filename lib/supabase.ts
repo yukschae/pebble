@@ -935,7 +935,12 @@ export async function getUserQuests(userId: string): Promise<QuestData[]> {
 }
 
 // クエストの進捗を更新する関数
-export async function updateQuestProgress(questId: number, completed: boolean, current: boolean) {
+export async function updateQuestProgress(
+  questId: number,
+  completed: boolean,
+  current: boolean,
+  progress?: number,
+) {
   try {
     console.log("Updating quest progress for quest ID:", questId)
     const supabase = getSupabaseClient()
@@ -945,6 +950,7 @@ export async function updateQuestProgress(questId: number, completed: boolean, c
       .update({
         completed,
         current,
+        ...(typeof progress === "number" ? { progress } : {}),
         updated_at: new Date().toISOString(),
       })
       .eq("id", questId)
@@ -1113,7 +1119,7 @@ export async function saveQuestReflection(
   try {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
-      .from('space_explorations')
+      .from('planet_explorations')
       .insert([{ ...exploration, created_at: new Date().toISOString() }])
       .select()
       .single()

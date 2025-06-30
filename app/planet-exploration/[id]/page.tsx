@@ -20,6 +20,7 @@ import {
   saveQuestReflection,
   saveAdventureStory,
   updateRPGProfile,
+  updateQuestProgress,
   getUserStats,
   useAuth,
 } from "@/lib/supabase"
@@ -78,6 +79,8 @@ export default function PlanetExplorationPage() {
     next_destination: "",
   })
 
+  const pendingKey = `pending-exploration-${questId}`
+
   useEffect(() => {
     if (user && questId) {
       loadQuest()
@@ -104,6 +107,19 @@ export default function PlanetExplorationPage() {
         ...prev,
         difficulty: foundQuest.difficulty || 3,
       }))
+
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(pendingKey)
+        if (stored) {
+          try {
+            const data = JSON.parse(stored)
+            if (data.preFlightForm) setPreFlightForm(data.preFlightForm)
+            if (data.phase) setCurrentPhase(data.phase)
+          } catch (e) {
+            console.error('Failed to load pending exploration', e)
+          }
+        }
+      }
     } catch (error) {
       console.error("Error loading quest:", error)
       setError("惑星データの読み込み中にエラーが発生しました。")
@@ -119,6 +135,30 @@ export default function PlanetExplorationPage() {
       await handleMissionComplete()
     }
   }
+
+  const handleSavePreFlight = async () => {
+    if (!user || !quest) {
+      router.push('/dashboard')
+      return
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        pendingKey,
+        JSON.stringify({ preFlightForm, phase: 2 }),
+      )
+    }
+
+    try {
+      await updateQuestProgress(quest.id, false, true, 30)
+    } catch (err) {
+      console.error('Failed to update progress on save', err)
+    }
+
+    router.push('/dashboard')
+  }
+
+
 
   const handleMissionComplete = async () => {
     if (!user || !quest) return
@@ -191,6 +231,24 @@ export default function PlanetExplorationPage() {
 
       await saveAdventureStory(user.id, savedExploration.id as number, landingStory, "landing")
       await saveAdventureStory(user.id, savedExploration.id as number, explorationLogStory, "exploration_log")
+
+        // クエスト進捗を更新
+        await updateQuestProgress(quest.id, true, false, 100)
+
+        const allQuests = await getUserQuests(user.id)
+        const currentIndex = allQuests.findIndex((q) => q.id === quest.id)
+        if (currentIndex !== -1 && currentIndex < allQuests.length - 1) {
+          const nextQuest = allQuests[currentIndex + 1]
+          if (nextQuest && !nextQuest.completed) {
+            await updateQuestProgress(nextQuest.id, false, true, 0)
+          }
+        }
+  
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(pendingKey)
+        }
+  
+
 
       // 着陸成功演出
       setShowCelebration(true)
@@ -639,28 +697,39 @@ export default function PlanetExplorationPage() {
               前へ
             </button>
 
-            <button
-              onClick={handlePhaseComplete}
-              disabled={saving}
-              className="flex items-center px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-lg text-white font-medium disabled:opacity-70 disabled:cursor-not-allowed shadow-lg"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  記録中...
-                </>
-              ) : currentPhase === 3 ? (
-                <>
-                  <Save className="w-5 h-5 mr-2" />
-                  探索完了
-                </>
-              ) : (
-                <>
-                  次へ
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
+            <div className="flex gap-4">
+              {currentPhase === 1 && (
+                <button
+                  onClick={handleSavePreFlight}
+                  className="flex items-center px-6 py-3 bg-gray-600 hover:bg-gray-500 rounded-lg text-white shadow-lg"
+                >
+                  <Save className="w-5 h-5 mr-2" />保存して戻る
+                </button>
               )}
-            </button>
+
+              <button
+                onClick={handlePhaseComplete}
+                disabled={saving}
+                className="flex items-center px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-lg text-white font-medium disabled:opacity-70 disabled:cursor-not-allowed shadow-lg"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    記録中...
+                  </>
+                ) : currentPhase === 3 ? (
+                  <>
+                    <Save className="w-5 h-5 mr-2" />
+                    探索完了
+                  </>
+                ) : (
+                  <>
+                    次へ
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {error && (
