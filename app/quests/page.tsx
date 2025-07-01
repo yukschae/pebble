@@ -482,13 +482,13 @@ export default function PlanetMapPage() {
 
       {/* サイドバー - 宇宙ステーション */}
       <motion.div
-        className="fixed top-0 bottom-0 w-80 bg-gray-900/80 backdrop-blur-xl border-r border-blue-400/30 z-10 shadow-2xl"
+        className="fixed top-0 bottom-0 w-64 bg-gray-900/80 backdrop-blur-xl border-r border-blue-400/30 z-10 shadow-2xl overflow-y-auto pb-24"
         initial={false}
-        animate={{ x: sidebarOpen ? 0 : -320 }}
+        animate={{ x: sidebarOpen ? 0 : -256 }}
         transition={{ duration: 0.3 }}
       >
         {/* ヘッダー */}
-        <div className="p-6 relative">
+        <div className="p-4 relative">
           <button
             onClick={toggleSidebar}
             className="absolute -right-3 top-1/2 -translate-y-1/2 bg-gray-800/70 hover:bg-gray-700/70 p-1 rounded-r-lg border border-blue-400/30"
@@ -654,31 +654,31 @@ export default function PlanetMapPage() {
         </button>
       )}
 
-      {/* メイン2D宇宙マップエリア */}
-      <div className="flex-1 relative">
+   {/* メイン2D宇宙マップエリア */}
+   <div className="flex-1 relative">
         {/* ヘッダー */}
         <motion.div
-          className="absolute top-0 z-20 p-6 transition-all"
-          style={{ left: sidebarOpen ? "20rem" : 0, right: 0 }}
+          className="absolute top-0 z-20 p-4 transition-all"
+          style={{ left: sidebarOpen ? "16rem" : 0, right: 0 }}
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className="flex items-center justify-between">
-            <div className="bg-gray-900/80 backdrop-blur-xl text-blue-100 px-6 py-3 rounded-2xl shadow-lg border border-blue-400/30 flex items-center">
-              <span className="mr-2">🌌</span>
-              <span className="font-bold text-lg">{direction?.title || "クエストマップ"}</span>
-              <span className="ml-2">🎨</span>
+            <div className="bg-gray-900/80 backdrop-blur-xl text-blue-100 px-3 py-2 rounded-2xl shadow-lg border border-blue-400/30 flex items-center text-sm">
+              <span className="mr-1">🌌</span>
+              <span className="font-bold">{direction?.title || "クエストマップ"}</span>
+              <span className="ml-1">🎨</span>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="bg-gray-900/80 backdrop-blur-xl px-4 py-2 rounded-xl border border-blue-400/30 flex items-center">
-                <Flame className="w-5 h-5 text-orange-400 mr-2" />
-                <span className="text-blue-100 font-bold">エネルギー: {energy}</span>
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="bg-gray-900/80 backdrop-blur-xl px-3 py-1 rounded-xl border border-blue-400/30 flex items-center">
+                <Flame className="w-4 h-4 text-orange-400 mr-1" />
+                <span className="text-blue-100 font-bold">{energy}</span>
               </div>
-              <div className="bg-gray-900/80 backdrop-blur-xl px-4 py-2 rounded-xl border border-blue-400/30 flex items-center">
-                <Diamond className="w-5 h-5 text-cyan-400 mr-2" />
-                <span className="text-blue-100 font-bold">発見: {completedPlanets}</span>
+              <div className="bg-gray-900/80 backdrop-blur-xl px-3 py-1 rounded-xl border border-blue-400/30 flex items-center">
+                <Diamond className="w-4 h-4 text-cyan-400 mr-1" />
+                <span className="text-blue-100 font-bold">{completedPlanets}</span>
               </div>
             </div>
           </div>
