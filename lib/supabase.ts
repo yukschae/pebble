@@ -805,11 +805,11 @@ export async function saveQuests(userId: string, quests: any[]) {
       throw deleteError
     }
 
-    // 新しいクエストを保存
     const questsWithUserId = quests.map((quest, index) => {
-      const { id, ...rest } = quest
+      const sanitized = { ...quest }
+      delete (sanitized as any).id
       return {
-        ...rest,
+        ...sanitized,
         user_id: userId,
         order: index,
         created_at: new Date().toISOString(),

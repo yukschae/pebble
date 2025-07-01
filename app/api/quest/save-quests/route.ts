@@ -32,12 +32,16 @@ export async function POST(req: NextRequest) {
     const { error: delErr } = await supabase.from("quests").delete().eq("user_id", userId)
     if (delErr) throw delErr
 
-    const questsWithUser = quests.map((q: any, idx: number) => ({
-      ...q,
-      user_id: userId,
-      order: idx,
-      created_at: new Date().toISOString(),
-    }))
+    const questsWithUser = quests.map((q: any, idx: number) => {
+      const sanitized = { ...q }
+      delete sanitized.id
+      return {
+        ...sanitized,
+        user_id: userId,
+        order: idx,
+        created_at: new Date().toISOString(),
+      }
+    })
     const { error } = await supabase.from("quests").insert(questsWithUser)
     if (error) throw error
 
