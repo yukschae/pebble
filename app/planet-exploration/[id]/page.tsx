@@ -495,7 +495,7 @@ export default function PlanetExplorationPage() {
 
                 <div className="space-y-8">
                   <div>
-                    <label className="block text-lg font-medium text-white mb-4">探索成功の確率はどのくらいだと思いますか？</label>
+                    <label className="block text-lg font-medium text-white mb-4">このクエスト、どれくらい達成できる自信ある？</label>
                     {getSlider(preFlightForm.success_rate, (value) =>
                       setPreFlightForm((prev) => ({ ...prev, success_rate: value })),
                     )}
@@ -504,7 +504,7 @@ export default function PlanetExplorationPage() {
                   <div>
                     <label className="block text-lg font-medium text-white mb-4 flex items-center">
                       <Sparkles className="w-5 h-5 mr-2 text-cyan-400" />
-                      どのくらいワクワクしていますか？
+                      このクエストはどのくらい楽しそう？
                     </label>
                     {getStarRating(preFlightForm.excitement, (value) =>
                       setPreFlightForm((prev) => ({ ...prev, excitement: value })),
@@ -514,7 +514,7 @@ export default function PlanetExplorationPage() {
                   <div>
                     <label className="block text-lg font-medium text-white mb-4 flex items-center">
                       <Star className="w-5 h-5 mr-2 text-yellow-400" />
-                      この探索はどのくらい重要ですか？
+                      このクエストはどのくらい大事なステップだと思う？
                     </label>
                     {getStarRating(preFlightForm.importance, (value) =>
                       setPreFlightForm((prev) => ({ ...prev, importance: value })),
@@ -524,7 +524,7 @@ export default function PlanetExplorationPage() {
                   <div>
                     <label className="block text-lg font-medium text-white mb-4 flex items-center">
                       <Zap className="w-5 h-5 mr-2 text-red-400" />
-                      どのくらい困難だと予想しますか？
+                      このクエストはどのくらい難しそう？
                     </label>
                     {getStarRating(preFlightForm.difficulty, (value) =>
                       setPreFlightForm((prev) => ({ ...prev, difficulty: value })),
