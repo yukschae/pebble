@@ -806,12 +806,15 @@ export async function saveQuests(userId: string, quests: any[]) {
     }
 
     // 新しいクエストを保存
-    const questsWithUserId = quests.map((quest, index) => ({
-      ...quest,
-      user_id: userId,
-      order: index,
-      created_at: new Date().toISOString(),
-    }))
+    const questsWithUserId = quests.map((quest, index) => {
+      const { id, ...rest } = quest
+      return {
+        ...rest,
+        user_id: userId,
+        order: index,
+        created_at: new Date().toISOString(),
+      }
+    })
 
     const { error } = await supabase.from("quests").insert(questsWithUserId)
 
