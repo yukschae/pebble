@@ -102,7 +102,7 @@ function Planet2D({
 
       {/* 惑星本体 */}
       <motion.div
-        className={`relative w-20 h-20 rounded-full bg-gradient-to-br ${planet.bgColor} border-2 border-blue-300/30 shadow-2xl flex items-center justify-center`}
+        className={`relative w-20 h-20 rounded-full bg-gradient-to-br ${planet.bgColor} border-2 border-blue-300/30 shadow-2xl flex items-center justify-center ${isSelected ? 'z-30' : 'z-10'}`}
         animate={{
           boxShadow: isSelected
             ? `0 0 30px ${planet.glowColor}, 0 0 60px ${planet.glowColor}`
@@ -146,7 +146,7 @@ function Planet2D({
 
       {/* 惑星名ラベル */}
       <motion.div
-        className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-gray-900/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg border border-blue-400/30"
+       className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-gray-900/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg border border-blue-400/30 z-20"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: isSelected ? 1 : 0.9, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -482,7 +482,7 @@ export default function PlanetMapPage() {
 
       {/* サイドバー - 宇宙ステーション */}
       <motion.div
-        className="fixed top-0 bottom-0 w-64 bg-gray-900/80 backdrop-blur-xl border-r border-blue-400/30 z-10 shadow-2xl overflow-y-auto pb-24"
+        className="fixed top-0 bottom-0 w-64 bg-gray-900/80 backdrop-blur-xl border-r border-blue-400/30 z-10 shadow-2xl overflow-y-auto"
         initial={false}
         animate={{ x: sidebarOpen ? 0 : -256 }}
         transition={{ duration: 0.3 }}
@@ -628,7 +628,7 @@ export default function PlanetMapPage() {
         </div>
 
         {/* ユーザープロファイル */}
-        <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="sticky bottom-0 left-0 right-0 p-6 z-10 bg-transparent">
           <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 flex items-center border border-blue-400/30">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mr-3">
               <span className="text-white font-bold">{username.charAt(0)}</span>
